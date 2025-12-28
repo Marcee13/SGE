@@ -1,0 +1,27 @@
+package sistemaestudiantil.sge.model;
+
+import java.time.LocalDate;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import sistemaestudiantil.sge.enums.EstadoPago;
+
+@Data
+@Entity
+@Table(name = "pagos")
+public class Pago {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long idPago;
+    @ManyToOne
+    @JoinColumn(name = "id_estudiante")
+    private Estudiante estudiante;
+    @ManyToOne
+    @JoinColumn(name = "id_arancel")
+    private Arancel arancel;
+    private Double monto;
+    private LocalDate fechaVencimiento;
+    private LocalDate fechaPago;
+    @Enumerated(EnumType.STRING)
+    private EstadoPago estado;
+}
