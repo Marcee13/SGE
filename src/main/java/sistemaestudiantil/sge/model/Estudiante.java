@@ -40,6 +40,8 @@ public class Estudiante {
     private Double notaExamenEspecifico;
     @Column(name = "esta_activo")
     private Boolean estaActivo = true;
+    @Column(name = "debe_cambiar_clave")
+    private Boolean debeCambiarClave=false;
 
     @ManyToOne
     @JoinColumn(name = "id_carrera")

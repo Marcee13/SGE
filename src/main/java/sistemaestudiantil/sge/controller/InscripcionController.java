@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import sistemaestudiantil.sge.dto.HistorialDTO;
 import sistemaestudiantil.sge.dto.InscripcionDTO;
@@ -14,12 +14,10 @@ import sistemaestudiantil.sge.service.InscripcionService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-
-
-
-@Controller
+@RestController
 @RequestMapping("api/inscripciones")
 public class InscripcionController {
     private final InscripcionService service;
@@ -47,4 +45,10 @@ public class InscripcionController {
         return new ResponseEntity<>(new ApiResponse<>("Historial de notas obtenido.",historial,true),HttpStatus.OK);
     }
     
+    @PutMapping("/cambio-grupo")
+    public ResponseEntity<ApiResponse<InscripcionDTO>>cambiarGrupo(@RequestBody InscripcionDTO dto){
+        InscripcionDTO cambioRealizado=service.cambioGrupo(dto);
+        ApiResponse<InscripcionDTO> respuesta=new ApiResponse<>("Cambio de grupo realizado con éxito", cambioRealizado, true);
+        return new ResponseEntity<>(respuesta, HttpStatus.OK);
+    }
 }

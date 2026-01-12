@@ -25,6 +25,7 @@ public class EstudianteMapper {
         dto.setNotaExamenGeneral(estudiante.getNotaExamenGeneral());
         dto.setNotaExamenEspecifico(estudiante.getNotaExamenEspecifico());
         dto.setPaisResidencia(estudiante.getPaisResidencia());
+        dto.setDebeCambiarClave(estudiante.getDebeCambiarClave());
 
         if (estudiante.getCarrera() != null) {
         dto.setIdCarrera(estudiante.getCarrera().getIdCarrera());
@@ -37,6 +38,7 @@ public class EstudianteMapper {
         Estudiante estudiante = new Estudiante();
         estudiante.setIdEstudiante(dto.getIdEstudiante());
         estudiante.setCarnet(dto.getCarnet());
+        estudiante.setContrasenia(dto.getContrasenia());
         estudiante.setNombres(dto.getNombres());
         estudiante.setApellidos(dto.getApellidos());
         estudiante.setEmail(dto.getEmail());

@@ -11,6 +11,7 @@ public class ProfesorMapper {
         ProfesorDTO dto = new ProfesorDTO();
         dto.setIdProfesor(profesor.getIdProfesor());
         dto.setNombre(profesor.getNombre());
+        dto.setApellidos(profesor.getApellidos());
         dto.setEmail(profesor.getEmail());
         dto.setDocumento(profesor.getDocumento());
         dto.setNumeroDocumento(profesor.getNumeroDocumento());
@@ -18,6 +19,7 @@ public class ProfesorMapper {
         dto.setPaisResidencia(profesor.getPaisResidencia());
         dto.setGenero(profesor.getGenero());
         dto.setSexo(profesor.getSexo());
+        dto.setEspecialidad(profesor.getEspecialidad());
         return dto;
     }
 
@@ -25,6 +27,7 @@ public class ProfesorMapper {
         Profesor profesor = new Profesor();
         profesor.setIdProfesor(dto.getIdProfesor());
         profesor.setNombre(dto.getNombre());
+        profesor.setApellidos(dto.getApellidos());
         profesor.setEmail(dto.getEmail());
         profesor.setDocumento(dto.getDocumento());
         profesor.setNumeroDocumento(dto.getNumeroDocumento());
@@ -32,6 +35,7 @@ public class ProfesorMapper {
         profesor.setGenero(dto.getGenero());
         profesor.setSexo(dto.getSexo());
         profesor.setPaisResidencia(dto.getPaisResidencia());
+        profesor.setEspecialidad(dto.getEspecialidad());
         return profesor;
     }
 }

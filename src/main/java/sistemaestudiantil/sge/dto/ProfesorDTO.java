@@ -10,6 +10,7 @@ import sistemaestudiantil.sge.enums.TipoDocumento;
 public class ProfesorDTO {
     private Long idProfesor;
     private String nombre;
+    private String apellidos;
     private String email;
     private TipoDocumento documento;
     private String numeroDocumento;
@@ -17,4 +18,5 @@ public class ProfesorDTO {
     private Generos genero;
     private Sexos sexo;
     private String paisResidencia;
+    private String especialidad;
 }

@@ -11,4 +11,5 @@ public class EvaluacionDTO {
     private String nombreActividad;
     private Double porcentaje;
     private Double notaObtenida;
+    private Long idEvaluacion;
 }

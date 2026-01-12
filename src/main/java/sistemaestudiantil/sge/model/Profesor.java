@@ -17,6 +17,7 @@ public class Profesor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idProfesor;
     private String nombre;
+    private String apellidos;
     private String email;
     private String password;
     @Enumerated(EnumType.STRING)
@@ -29,6 +30,8 @@ public class Profesor {
     @Enumerated(EnumType.STRING)
     private Sexos sexo;
     private String paisResidencia;
+    private String especialidad;
+    private Boolean activo=true;
 
     @OneToMany(mappedBy = "profesor")
     private List<Grupo> grupos;

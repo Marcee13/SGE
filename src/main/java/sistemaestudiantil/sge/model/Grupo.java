@@ -1,5 +1,7 @@
 package sistemaestudiantil.sge.model;
 
+import java.time.LocalTime;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import sistemaestudiantil.sge.enums.CicloAcademico;
@@ -20,6 +22,12 @@ public class Grupo {
     @ManyToOne
     @JoinColumn(name="idAsignatura")
     private Asignatura asignatura;
-
-
+    @Column(name = "cupos_disponibles", nullable = false)
+    private Integer cuposDisponibles;
+    @Column(nullable = false)
+    private String dias;
+    @Column(nullable = false)
+    private LocalTime horaInicio;
+    @Column(nullable = false)
+    private LocalTime horaFin;
 }

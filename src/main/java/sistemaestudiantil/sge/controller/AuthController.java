@@ -1,39 +1,43 @@
 package sistemaestudiantil.sge.controller;
 
-import java.util.Map;
-
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import sistemaestudiantil.sge.dto.EstudianteDTO;
+import sistemaestudiantil.sge.dto.CambioContraseniaDTO;
 import sistemaestudiantil.sge.dto.LoginDTO;
-import sistemaestudiantil.sge.mapper.EstudianteMapper;
-import sistemaestudiantil.sge.model.Estudiante;
 import sistemaestudiantil.sge.response.ApiResponse;
+import sistemaestudiantil.sge.response.AuthResponse;
 import sistemaestudiantil.sge.service.AuthService;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
     private final AuthService authService;
-    private final EstudianteMapper estudianteMapper;
 
-    public AuthController(AuthService authService, EstudianteMapper estudianteMapper) {
+    public AuthController(AuthService authService) {
         this.authService = authService;
-        this.estudianteMapper=estudianteMapper;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<EstudianteDTO>> login(@RequestBody LoginDTO dto) {
-        Estudiante estudianteEntity = authService.login(dto);
-        EstudianteDTO respuestaDTO = estudianteMapper.toDTO(estudianteEntity);
-        ApiResponse<EstudianteDTO> respuesta = new ApiResponse<>(
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody LoginDTO dto) {
+        AuthResponse authResponse=authService.login(dto);
+        ApiResponse<AuthResponse> respuesta = new ApiResponse<>(
             "Login exitoso", 
-            respuestaDTO, 
+            authResponse, 
+            true
+        );
+        return ResponseEntity.ok(respuesta);
+    }
+
+    @PostMapping("/cambiar-password")
+    public ResponseEntity<ApiResponse<String>> cambiarPassword(@RequestBody CambioContraseniaDTO dto) {
+        authService.cambiarContrasenia(dto);
+        ApiResponse<String> respuesta = new ApiResponse<>(
+            "Cambio de contraseña exitoso. Por favor inicie sesión nuevamente.", 
+            null,
             true
         );
         return ResponseEntity.ok(respuesta);

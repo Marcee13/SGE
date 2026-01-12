@@ -19,6 +19,7 @@ public class EstudianteDTO {
     private String nombres;
     private String apellidos;
     private String email;
+    private String contrasenia;
     @JsonFormat(pattern = "dd-MM-yyyy") //Setea el formato a la fecha sino por defecto es AAAA-MM-DD
     private LocalDate fechaNacimiento;
     private String numeroTelefonico;
@@ -30,6 +31,7 @@ public class EstudianteDTO {
     private Double notaExamenGeneral;
     private Double notaExamenEspecifico;
     private String paisResidencia;
+    private boolean debeCambiarClave;
 
     private Long idCarrera;
     private String nombreCarrera;

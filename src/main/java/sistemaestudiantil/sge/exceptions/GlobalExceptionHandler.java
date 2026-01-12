@@ -1,7 +1,6 @@
 package sistemaestudiantil.sge.exceptions;
 
 import java.util.Arrays;
-import java.util.Map;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;

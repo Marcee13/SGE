@@ -105,10 +105,4 @@ public class EstudianteController {
         EstudianteDTO resultado = service.formalizarInscripcion(id);
         return ResponseEntity.ok(resultado);
     }
-    
-    @PostMapping("/cierre-admision")
-    public ResponseEntity<List<EstudianteDTO>> ejecutarCierreAdmision(@RequestParam(defaultValue = "2026") Integer anio) {
-        List<EstudianteDTO> nuevosEstudiantes = service.cerrarCicloAdmision(anio);
-        return ResponseEntity.ok(nuevosEstudiantes);
-    }
 }

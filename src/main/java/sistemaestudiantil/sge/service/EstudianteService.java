@@ -6,22 +6,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import sistemaestudiantil.sge.dto.EstudianteDTO;
 import sistemaestudiantil.sge.enums.EstadoEstudiante;
+import sistemaestudiantil.sge.enums.EstadoPago;
 import sistemaestudiantil.sge.enums.TipoArancel;
 import sistemaestudiantil.sge.enums.TipoExamenAdmision;
 import sistemaestudiantil.sge.exceptions.DuplicadoException;
+import sistemaestudiantil.sge.exceptions.OperacionNoPermitidaException;
 import sistemaestudiantil.sge.exceptions.RecursoNoencontradoException;
 import sistemaestudiantil.sge.mapper.EstudianteMapper;
 import sistemaestudiantil.sge.model.Carrera;
 import sistemaestudiantil.sge.model.Estudiante;
 import sistemaestudiantil.sge.repository.CarreraRepository;
 import sistemaestudiantil.sge.repository.EstudianteRepository;
-
+import sistemaestudiantil.sge.repository.PagoRepository;
 
 @Service
 public class EstudianteService {
@@ -29,9 +32,13 @@ public class EstudianteService {
     private final EstudianteMapper mapper;
     private final CarreraRepository carreraRepository;
     private final PagoService pagoService;
+    private final PagoRepository pagoRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public EstudianteService(EstudianteRepository repository, EstudianteMapper mapper, CarreraRepository carreraRepository, PagoService pagoService){
+    public EstudianteService(EstudianteRepository repository, PasswordEncoder passwordEncoder, PagoRepository pagoRepository, EstudianteMapper mapper, CarreraRepository carreraRepository, PagoService pagoService){
         this.repository=repository;
+        this.passwordEncoder=passwordEncoder;
+        this.pagoRepository=pagoRepository;
         this.mapper=mapper;
         this.carreraRepository=carreraRepository;
         this.pagoService=pagoService;
@@ -48,8 +55,11 @@ public class EstudianteService {
         
         Estudiante entidad = mapper.toEntity(dto);
         entidad.setNumeroDocumento(numeroLimpio);
-        entidad.setCarnet(null); //Se agrega ya que en un inicio al crearse el estudiante no se setea el carnet, sino hasta aprovada la inscripcion.
+        entidad.setCarnet(null);
         entidad.setEstado(EstadoEstudiante.ASPIRANTE);
+        if (dto.getContrasenia() != null && !dto.getContrasenia().isEmpty()) {
+            entidad.setContrasenia(passwordEncoder.encode(dto.getContrasenia()));
+        }
         
         Estudiante guardado= repository.save(entidad);
         pagoService.generarPagoExamen(guardado, TipoArancel.EXAMEN_ADMISION);
@@ -78,6 +88,20 @@ public class EstudianteService {
         }
         
         Estudiante estudiante=repository.findById(idEstudiante).orElseThrow(()->new RecursoNoencontradoException("Aspirante con ID "+idEstudiante+" no encontrado."));
+
+        String codigoArancelRequerido = (tipoExamen == TipoExamenAdmision.GENERAL) ? "EX-ADM" : "EX-CON";
+        
+        boolean estaSolvente = pagoRepository.existsByEstudiante_IdEstudianteAndArancel_CodigoAndEstado(
+                idEstudiante, 
+                codigoArancelRequerido, 
+                EstadoPago.PAGADO 
+        );
+
+        if (!estaSolvente) {
+            throw new OperacionNoPermitidaException(
+                "No se puede registrar la nota. El aspirante no ha realizado el pago correspondiente al examen: " + codigoArancelRequerido
+            );
+        }
 
         if(tipoExamen==TipoExamenAdmision.GENERAL){
             evaluarExamenGeneral(estudiante,notaExamen);
@@ -225,15 +249,12 @@ public class EstudianteService {
         }
 
         Map<String, Integer> contadoresPorPrefijo = new HashMap<>();
-
         String anioDosDigitos = String.valueOf(anioIngreso).substring(2);
 
         for (Estudiante estudiante : seleccionados) {
             
             String prefijoLetras = obtenerIniciales(estudiante.getApellidos());
-            
             String prefijoCompleto = prefijoLetras + anioDosDigitos;
-
             int correlativoActual = contadoresPorPrefijo.getOrDefault(prefijoCompleto, 1);
             
             String carnetGenerado = prefijoCompleto + String.format("%03d", correlativoActual);
@@ -241,6 +262,10 @@ public class EstudianteService {
             estudiante.setCarnet(carnetGenerado);
             estudiante.setEstado(EstadoEstudiante.ESTUDIANTE);
             estudiante.setEstaActivo(true);
+
+            String claveTemporal = carnetGenerado + "." + anioIngreso;
+            estudiante.setContrasenia(claveTemporal);
+            estudiante.setDebeCambiarClave(true); 
 
             contadoresPorPrefijo.put(prefijoCompleto, correlativoActual + 1);
 

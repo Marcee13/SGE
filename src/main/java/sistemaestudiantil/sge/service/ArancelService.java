@@ -1,5 +1,7 @@
 package sistemaestudiantil.sge.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -29,5 +31,12 @@ public class ArancelService {
         Arancel guardado = arancelRepository.save(arancel);
         
         return mapper.toDTO(guardado);
+    }
+
+    public List<ArancelDTO> obtenerTodos() {
+        List<Arancel> lista = arancelRepository.findAll();
+        return lista.stream()
+                    .map(mapper::toDTO)
+                    .toList();
     }
 }
