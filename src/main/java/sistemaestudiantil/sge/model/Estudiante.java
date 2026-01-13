@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import sistemaestudiantil.sge.enums.EstadoEstudiante;
 import sistemaestudiantil.sge.enums.Generos;
+import sistemaestudiantil.sge.enums.Roles;
 import sistemaestudiantil.sge.enums.Sexos;
 import sistemaestudiantil.sge.enums.TipoDocumento;
 
@@ -42,6 +43,7 @@ public class Estudiante {
     private Boolean estaActivo = true;
     @Column(name = "debe_cambiar_clave")
     private Boolean debeCambiarClave=false;
+    private Roles rol;
 
     @ManyToOne
     @JoinColumn(name = "id_carrera")

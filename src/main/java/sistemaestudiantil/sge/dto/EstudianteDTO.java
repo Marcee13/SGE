@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import sistemaestudiantil.sge.enums.EstadoEstudiante;
 import sistemaestudiantil.sge.enums.Generos;
+import sistemaestudiantil.sge.enums.Roles;
 import sistemaestudiantil.sge.enums.Sexos;
 import sistemaestudiantil.sge.enums.TipoDocumento;
 
@@ -32,6 +33,7 @@ public class EstudianteDTO {
     private Double notaExamenEspecifico;
     private String paisResidencia;
     private boolean debeCambiarClave;
+    private Roles rol;
 
     private Long idCarrera;
     private String nombreCarrera;

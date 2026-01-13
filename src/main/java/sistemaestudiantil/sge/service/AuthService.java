@@ -5,9 +5,11 @@ import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import lombok.ToString;
 import sistemaestudiantil.sge.dto.CambioContraseniaDTO;
 import sistemaestudiantil.sge.dto.LoginDTO;
 import sistemaestudiantil.sge.enums.EstadoEstudiante;
+import sistemaestudiantil.sge.enums.Roles;
 import sistemaestudiantil.sge.exceptions.CredencialesInvalidasException;
 import sistemaestudiantil.sge.exceptions.OperacionNoPermitidaException;
 import sistemaestudiantil.sge.exceptions.RecursoNoencontradoException;
@@ -42,8 +44,7 @@ public class AuthService {
         
         Optional<Estudiante> usuarioOpt;
         boolean esCorreo = input.contains("@");
-        
-        // 2. Buscar usuario en BD
+
         if (esCorreo) {
             usuarioOpt = estudianteRepository.findByEmail(input);
         } else {
@@ -56,15 +57,15 @@ public class AuthService {
 
         Estudiante estudiante = usuarioOpt.get();
 
-        if (esCorreo && estudiante.getEstado() == EstadoEstudiante.ESTUDIANTE) {
-             throw new OperacionNoPermitidaException("Usted ya es estudiante oficial. Por favor ingrese con su Carnet.");
+        if (esCorreo && estudiante.getEstado() == EstadoEstudiante.ESTUDIANTE&&!estudiante.getRol().equals(Roles.ROLE_ADMIN)) {
+            throw new OperacionNoPermitidaException("Usted ya es estudiante oficial. Por favor ingrese con su Carnet.");
         }
 
         if (!passwordEncoder.matches(rawPass, estudiante.getContrasenia())) {
             throw new CredencialesInvalidasException("Credenciales incorrectas.");
         }
 
-        String rolUsuario = "ROLE_ESTUDIANTE";
+        String rolUsuario = estudiante.getRol().toString();
 
         String username = estudiante.getCarnet() != null ? estudiante.getCarnet() : estudiante.getEmail();
         

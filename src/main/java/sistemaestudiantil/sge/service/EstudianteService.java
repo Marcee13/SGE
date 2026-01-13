@@ -14,6 +14,7 @@ import jakarta.transaction.Transactional;
 import sistemaestudiantil.sge.dto.EstudianteDTO;
 import sistemaestudiantil.sge.enums.EstadoEstudiante;
 import sistemaestudiantil.sge.enums.EstadoPago;
+import sistemaestudiantil.sge.enums.Roles;
 import sistemaestudiantil.sge.enums.TipoArancel;
 import sistemaestudiantil.sge.enums.TipoExamenAdmision;
 import sistemaestudiantil.sge.exceptions.DuplicadoException;
@@ -57,6 +58,7 @@ public class EstudianteService {
         entidad.setNumeroDocumento(numeroLimpio);
         entidad.setCarnet(null);
         entidad.setEstado(EstadoEstudiante.ASPIRANTE);
+        entidad.setRol(Roles.ROLE_ESTUDIANTE);
         if (dto.getContrasenia() != null && !dto.getContrasenia().isEmpty()) {
             entidad.setContrasenia(passwordEncoder.encode(dto.getContrasenia()));
         }

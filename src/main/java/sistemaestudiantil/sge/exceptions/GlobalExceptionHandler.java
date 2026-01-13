@@ -6,6 +6,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -146,5 +148,35 @@ public class GlobalExceptionHandler {
             false
         );
         return new ResponseEntity<>(respuesta, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Object>> manejarAccesoDenegado(AccessDeniedException ex) {
+        ApiResponse<Object> respuesta = new ApiResponse<>(
+            "No tiene permisos para acceder a este recurso. Requiere un rol superior.",
+            null,
+            false
+        );
+        return new ResponseEntity<>(respuesta, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiResponse<Object>> manejarErrorAutenticacion(AuthenticationException ex) {
+        ApiResponse<Object> respuesta = new ApiResponse<>(
+            "No autorizado. Por favor inicie sesión nuevamente.",
+            null,
+            false
+        );
+        return new ResponseEntity<>(respuesta, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Object>> manejarErrorGeneral(Exception ex) {
+        ApiResponse<Object> respuesta = new ApiResponse<>(
+            "Ocurrió un error interno en el servidor: " + ex.getMessage(),
+            null,
+            false
+        );
+        return new ResponseEntity<>(respuesta, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
