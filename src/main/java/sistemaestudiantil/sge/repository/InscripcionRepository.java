@@ -19,9 +19,14 @@ import java.util.Optional;
 @Repository
 public interface InscripcionRepository extends JpaRepository<Inscripcion, Long>{
     boolean existsByEstudianteAndGrupo(Estudiante estudiante, Grupo grupo);
+
+    boolean existsByIdInscripcionAndEstudiante_IdEstudiante(Long idInscripcion, Long idEstudiante);
+    
     long countByGrupo(Grupo grupo);
 
     List<Inscripcion> findByEstudiante_IdEstudiante(Long idEstudiante);
+    
+    boolean existsByIdInscripcionAndGrupo_Profesor_Email(Long idInscripcion, String emailProfesor);
 
     @Query("SELECT i FROM Inscripcion i " + "WHERE i.estudiante.idEstudiante = :idEstudiante " + "AND i.grupo.asignatura.idAsignatura = :idAsignatura " + "AND i.grupo.ciclo = :ciclo")
     Optional<Inscripcion> findInscripcionActiva(@Param("idEstudiante") Long idEstudiante, @Param("idAsignatura") Long idAsignatura, @Param("ciclo") CicloAcademico ciclo);
@@ -29,12 +34,21 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long>{
     @Query("SELECT i FROM Inscripcion i WHERE i.grupo.ciclo = :ciclo AND i.estadoInscripcion = 'INSCRITO'")
     List<Inscripcion> findPendientesDeCierre(@Param("ciclo") CicloAcademico ciclo);
 
+    @Query("SELECT CASE WHEN COUNT(i) > 0 THEN true ELSE false END " +
+           "FROM Inscripcion i " +
+           "JOIN i.grupo g " +
+           "JOIN g.profesor p " +
+           "WHERE i.idInscripcion = :idInscripcion " +
+           "AND (p.email = :identificador OR p.codigoEmpleado = :identificador)")
+    boolean esInscripcionDeProfesor(@Param("idInscripcion") Long idInscripcion, 
+                                    @Param("identificador") String identificador);
+
     @Query("SELECT i FROM Inscripcion i " +
            "JOIN i.grupo g " +
            "WHERE i.estudiante.idEstudiante = :idEstudiante " +
            "AND g.ciclo = :ciclo " +
            "AND g.dias = :dias " +
-           "AND i.estadoInscripcion = 'INSCRITO' " + // Solo importa si está cursándola actualmente
+           "AND i.estadoInscripcion = 'INSCRITO' " +
            "AND ( " +
            "   (:horaInicio < g.horaFin) AND (:horaFin > g.horaInicio) " +
            ")")

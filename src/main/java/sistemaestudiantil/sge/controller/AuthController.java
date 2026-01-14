@@ -32,6 +32,17 @@ public class AuthController {
         return ResponseEntity.ok(respuesta);
     }
 
+    @PostMapping("/login-profesor")
+    public ResponseEntity<ApiResponse<AuthResponse>> loginProfesor(@RequestBody LoginDTO dto) {
+        AuthResponse authResponse = authService.loginProfesor(dto);
+        ApiResponse<AuthResponse> respuesta = new ApiResponse<>(
+            "Bienvenido Profesor. Login exitoso.", 
+            authResponse, 
+            true
+        );
+        return ResponseEntity.ok(respuesta);
+    }
+
     @PostMapping("/cambiar-password")
     public ResponseEntity<ApiResponse<String>> cambiarPassword(@RequestBody CambioContraseniaDTO dto) {
         authService.cambiarContrasenia(dto);

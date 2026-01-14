@@ -257,8 +257,23 @@ public class EstudianteService {
             
             String prefijoLetras = obtenerIniciales(estudiante.getApellidos());
             String prefijoCompleto = prefijoLetras + anioDosDigitos;
-            int correlativoActual = contadoresPorPrefijo.getOrDefault(prefijoCompleto, 1);
-            
+
+            if (!contadoresPorPrefijo.containsKey(prefijoCompleto)) {
+                
+                Optional<String> ultimoCarnetBD = repository.findUltimoCarnet(prefijoCompleto);
+                
+                if (ultimoCarnetBD.isPresent()) {
+                    String ultimoCarnet = ultimoCarnetBD.get();
+                    String numeroStr = ultimoCarnet.substring(4);
+                    int ultimoNumero = Integer.parseInt(numeroStr);
+                    contadoresPorPrefijo.put(prefijoCompleto, ultimoNumero + 1);
+                } else {
+                    contadoresPorPrefijo.put(prefijoCompleto, 1);
+                }
+            }
+
+            int correlativoActual = contadoresPorPrefijo.get(prefijoCompleto);
+
             String carnetGenerado = prefijoCompleto + String.format("%03d", correlativoActual);
             
             estudiante.setCarnet(carnetGenerado);
@@ -266,7 +281,7 @@ public class EstudianteService {
             estudiante.setEstaActivo(true);
 
             String claveTemporal = carnetGenerado + "." + anioIngreso;
-            estudiante.setContrasenia(claveTemporal);
+            estudiante.setContrasenia(passwordEncoder.encode(claveTemporal));
             estudiante.setDebeCambiarClave(true); 
 
             contadoresPorPrefijo.put(prefijoCompleto, correlativoActual + 1);

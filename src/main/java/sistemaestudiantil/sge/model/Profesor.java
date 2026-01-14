@@ -32,6 +32,8 @@ public class Profesor {
     private String paisResidencia;
     private String especialidad;
     private Boolean activo=true;
+    @Column(nullable = false, unique = true)
+    private String codigoEmpleado;
 
     @OneToMany(mappedBy = "profesor")
     private List<Grupo> grupos;

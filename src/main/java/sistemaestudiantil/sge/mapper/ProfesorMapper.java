@@ -20,6 +20,7 @@ public class ProfesorMapper {
         dto.setGenero(profesor.getGenero());
         dto.setSexo(profesor.getSexo());
         dto.setEspecialidad(profesor.getEspecialidad());
+        dto.setCodigoEmpleado(profesor.getCodigoEmpleado());
         return dto;
     }
 
@@ -29,6 +30,7 @@ public class ProfesorMapper {
         profesor.setNombre(dto.getNombre());
         profesor.setApellidos(dto.getApellidos());
         profesor.setEmail(dto.getEmail());
+        profesor.setPassword(dto.getPassword());
         profesor.setDocumento(dto.getDocumento());
         profesor.setNumeroDocumento(dto.getNumeroDocumento());
         profesor.setTipoContratacion(dto.getTipoContratacion());
@@ -36,6 +38,7 @@ public class ProfesorMapper {
         profesor.setSexo(dto.getSexo());
         profesor.setPaisResidencia(dto.getPaisResidencia());
         profesor.setEspecialidad(dto.getEspecialidad());
+        profesor.setCodigoEmpleado(dto.getCodigoEmpleado());
         return profesor;
     }
 }

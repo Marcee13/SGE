@@ -5,7 +5,6 @@ import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import lombok.ToString;
 import sistemaestudiantil.sge.dto.CambioContraseniaDTO;
 import sistemaestudiantil.sge.dto.LoginDTO;
 import sistemaestudiantil.sge.enums.EstadoEstudiante;
@@ -14,8 +13,11 @@ import sistemaestudiantil.sge.exceptions.CredencialesInvalidasException;
 import sistemaestudiantil.sge.exceptions.OperacionNoPermitidaException;
 import sistemaestudiantil.sge.exceptions.RecursoNoencontradoException;
 import sistemaestudiantil.sge.mapper.EstudianteMapper;
+import sistemaestudiantil.sge.mapper.ProfesorMapper;
 import sistemaestudiantil.sge.model.Estudiante;
+import sistemaestudiantil.sge.model.Profesor;
 import sistemaestudiantil.sge.repository.EstudianteRepository;
+import sistemaestudiantil.sge.repository.ProfesorRepository;
 import sistemaestudiantil.sge.response.AuthResponse;
 import sistemaestudiantil.sge.security.JwtUtil;
 
@@ -25,9 +27,13 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final EstudianteMapper estudianteMapper;
+    private final ProfesorRepository profesorRepository;
+    private final ProfesorMapper profesorMapper;
 
-    public AuthService(EstudianteRepository estudianteRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, EstudianteMapper estudianteMapper) {
+    public AuthService(EstudianteRepository estudianteRepository, JwtUtil jwtUtil, ProfesorMapper profesorMapper, PasswordEncoder passwordEncoder, EstudianteMapper estudianteMapper, ProfesorRepository profesorRepository) {
         this.estudianteRepository = estudianteRepository;
+        this.profesorMapper=profesorMapper;
+        this.profesorRepository=profesorRepository;
         this.jwtUtil = jwtUtil;
         this.estudianteMapper = estudianteMapper;
         this.passwordEncoder = passwordEncoder;
@@ -75,6 +81,26 @@ public class AuthService {
         response.setToken(token);
         response.setEstudiante(estudianteMapper.toDTO(estudiante));
 
+        return response;
+    }
+
+    public AuthResponse loginProfesor(LoginDTO loginDTO) {
+        String input = loginDTO.getIdentificador() != null ? loginDTO.getIdentificador().trim() : "";
+
+        Profesor profesor = profesorRepository.findByEmailOrCodigoEmpleado(input, input).orElseThrow(() -> new CredencialesInvalidasException("Profesor no encontrado."));
+
+        if (!passwordEncoder.matches(loginDTO.getContrasenia(), profesor.getPassword())) {
+             throw new CredencialesInvalidasException("Datos ingresados incorrectos.");
+        }
+
+        String tokenIdentifier = profesor.getEmail(); 
+
+        String token = jwtUtil.generateToken(tokenIdentifier, Roles.ROLE_PROFESOR.name());
+
+        AuthResponse response = new AuthResponse();
+        response.setToken(token);
+        response.setProfesor(profesorMapper.toDTO(profesor)); 
+        
         return response;
     }
 

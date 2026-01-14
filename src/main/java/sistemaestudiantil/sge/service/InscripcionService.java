@@ -11,6 +11,7 @@ import sistemaestudiantil.sge.dto.HistorialDTO;
 import sistemaestudiantil.sge.dto.InscripcionDTO;
 import sistemaestudiantil.sge.enums.CicloAcademico;
 import sistemaestudiantil.sge.enums.EstadoInscripcion;
+import sistemaestudiantil.sge.enums.Roles;
 import sistemaestudiantil.sge.exceptions.DuplicadoException;
 import sistemaestudiantil.sge.exceptions.OperacionNoPermitidaException;
 import sistemaestudiantil.sge.exceptions.RecursoNoencontradoException;
@@ -20,6 +21,7 @@ import sistemaestudiantil.sge.model.Estudiante;
 import sistemaestudiantil.sge.model.Grupo;
 import sistemaestudiantil.sge.model.Inscripcion;
 import sistemaestudiantil.sge.repository.EstudianteRepository;
+import sistemaestudiantil.sge.repository.EvaluacionRepository;
 import sistemaestudiantil.sge.repository.GrupoRespository;
 import sistemaestudiantil.sge.repository.InscripcionRepository;
 
@@ -30,9 +32,11 @@ public class InscripcionService {
     private final EstudianteRepository estudianteRepository;
     private final InscripcionRepository inscripcionRepository;
     private final InscripcionMapper inscripcionMapper;
+    private final EvaluacionRepository evaluacionRepository;
 
-    public InscripcionService(GrupoRespository gRespository, InscripcionMapper inscripcionMapper, EstudianteRepository eRepository, InscripcionRepository iRepository){
+    public InscripcionService(GrupoRespository gRespository, EvaluacionRepository evaluacionRepository, InscripcionMapper inscripcionMapper, EstudianteRepository eRepository, InscripcionRepository iRepository){
         this.grupoRespository = gRespository;
+        this.evaluacionRepository=evaluacionRepository;
         this.inscripcionMapper=inscripcionMapper;
         this.estudianteRepository = eRepository;
         this.inscripcionRepository = iRepository;
@@ -52,6 +56,10 @@ public class InscripcionService {
 
         if (grupo.getCuposDisponibles() <= 0) {
             throw new OperacionNoPermitidaException("El grupo ya no tiene cupos disponibles.");
+        }
+
+        if (estudiante.getRol().equals(Roles.ROLE_ADMINISTRATIVO) || estudiante.getRol().equals(Roles.ROLE_ADMIN)||estudiante.getRol().equals(Roles.ROLE_PROFESOR)) {
+            throw new OperacionNoPermitidaException("Los Administradores o Docentes no pueden inscribir materias.");
         }
 
         Long idAsignatura = grupo.getAsignatura().getIdAsignatura();
@@ -207,5 +215,36 @@ public class InscripcionService {
 
         return "Cierre del ciclo " + ciclo + " completado. " + 
                aprobados + " aprobados, " + reprobados + " reprobados.";
+    }
+
+    @Transactional
+    public InscripcionDTO retirarMateria(Long idInscripcion, Long idEstudianteSolicitante) {
+
+        Inscripcion inscripcion = inscripcionRepository.findById(idInscripcion)
+                .orElseThrow(() -> new RecursoNoencontradoException("Inscripción no encontrada."));
+
+        if (!inscripcion.getEstudiante().getIdEstudiante().equals(idEstudianteSolicitante)) {
+             throw new OperacionNoPermitidaException("No puede retirar una materia que no le pertenece.");
+        }
+
+        if (inscripcion.getEstadoInscripcion() != EstadoInscripcion.INSCRITO) {
+            throw new OperacionNoPermitidaException("Solo se pueden retirar materias en estado 'INSCRITO'. El estado actual es: " + inscripcion.getEstadoInscripcion());
+        }
+
+        Double porcentajeEvaluado = evaluacionRepository.obtenerPorcentajeAcumulado(idInscripcion);
+
+        if (porcentajeEvaluado == null) porcentajeEvaluado = 0.0;
+
+        if (porcentajeEvaluado > 50.0) {
+            throw new OperacionNoPermitidaException(
+                "Ya no es posible retirar la materia. Se ha evaluado el " + porcentajeEvaluado + "% del curso (Límite permitido: 50%)."
+            );
+        }
+
+        inscripcion.setEstadoInscripcion(EstadoInscripcion.RETIRADO);
+        inscripcion.setNotaFinal(0.0);
+
+        Inscripcion guardada = inscripcionRepository.save(inscripcion);
+        return inscripcionMapper.toDTO(guardada);
     }
 }

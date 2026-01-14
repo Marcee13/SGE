@@ -1,5 +1,7 @@
 package sistemaestudiantil.sge.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.Data;
 import sistemaestudiantil.sge.enums.Generos;
 import sistemaestudiantil.sge.enums.Sexos;
@@ -7,11 +9,13 @@ import sistemaestudiantil.sge.enums.TipoContratacion;
 import sistemaestudiantil.sge.enums.TipoDocumento;
 
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProfesorDTO {
     private Long idProfesor;
     private String nombre;
     private String apellidos;
     private String email;
+    private String password;
     private TipoDocumento documento;
     private String numeroDocumento;
     private TipoContratacion tipoContratacion;
@@ -19,4 +23,5 @@ public class ProfesorDTO {
     private Sexos sexo;
     private String paisResidencia;
     private String especialidad;
+    private String codigoEmpleado;
 }

@@ -2,6 +2,7 @@ package sistemaestudiantil.sge.service;
 
 import java.util.List;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -16,9 +17,11 @@ import sistemaestudiantil.sge.repository.ProfesorRepository;
 public class ProfesorService {
     private final ProfesorRepository repository;
     private final ProfesorMapper mapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public ProfesorService(ProfesorRepository repository, ProfesorMapper mapper){
+    public ProfesorService(ProfesorRepository repository, ProfesorMapper mapper, PasswordEncoder passwordEncoder){
         this.repository=repository;
+        this.passwordEncoder=passwordEncoder;   
         this.mapper=mapper;
     }
 
@@ -32,6 +35,11 @@ public class ProfesorService {
         }
 
         Profesor entidad =mapper.toEntity(dto);
+        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
+            entidad.setPassword(passwordEncoder.encode(dto.getPassword()));
+        } else {
+            throw new IllegalArgumentException("La contraseña es obligatoria para crear un profesor.");
+        }
         Profesor guardado=repository.save(entidad);
         return mapper.toDTO(guardado);
     }

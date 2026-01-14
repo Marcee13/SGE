@@ -31,4 +31,6 @@ public interface EstudianteRepository extends JpaRepository<Estudiante,Long> {
     List<Estudiante> findByEstadoOrderByApellidosAsc(EstadoEstudiante estado);
 
     Optional<Estudiante> findByCarnet(String carnet);
+
+    Optional<Estudiante> findByCarnetOrEmail(String carnet, String email);
 }
