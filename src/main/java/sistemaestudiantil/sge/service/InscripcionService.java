@@ -165,15 +165,13 @@ public class InscripcionService {
 
     @Transactional
     public InscripcionDTO cambioGrupo(InscripcionDTO dto) {
-        Estudiante estudiante = estudianteRepository.findById(dto.getIdEstudiante())
-                .orElseThrow(() -> new RecursoNoencontradoException("Estudiante no encontrado"));
+        Estudiante estudiante = estudianteRepository.findById(dto.getIdEstudiante()).orElseThrow(() -> new RecursoNoencontradoException("Estudiante no encontrado"));
 
         if (!estudiante.estaActivo()) {
             throw new OperacionNoPermitidaException("El estudiante no está activo.");
         }
 
-        Grupo nuevoGrupo = grupoRespository.findById(dto.getIdGrupo())
-                .orElseThrow(() -> new RecursoNoencontradoException("Grupo destino no encontrado"));
+        Grupo nuevoGrupo = grupoRespository.findById(dto.getIdGrupo()).orElseThrow(() -> new RecursoNoencontradoException("Grupo destino no encontrado"));
 
         if (nuevoGrupo.getCuposDisponibles() <= 0) {
             throw new OperacionNoPermitidaException("El grupo destino ya no tiene cupos disponibles.");
@@ -238,8 +236,7 @@ public class InscripcionService {
     @Transactional
     public InscripcionDTO retirarMateria(Long idInscripcion, Long idEstudianteSolicitante) {
 
-        Inscripcion inscripcion = inscripcionRepository.findById(idInscripcion)
-                .orElseThrow(() -> new RecursoNoencontradoException("Inscripción no encontrada."));
+        Inscripcion inscripcion = inscripcionRepository.findById(idInscripcion).orElseThrow(() -> new RecursoNoencontradoException("Inscripción no encontrada."));
 
         if (!inscripcion.getEstudiante().getIdEstudiante().equals(idEstudianteSolicitante)) {
              throw new OperacionNoPermitidaException("No puede retirar una materia que no le pertenece.");
@@ -272,12 +269,8 @@ public class InscripcionService {
         
         List<Inscripcion> historialCompleto = inscripcionRepository.findHistorialCompleto(idEstudiante);
 
-        long cantidadAprobadas = historialCompleto.stream()
-                .filter(i -> i.getEstadoInscripcion() == EstadoInscripcion.APROBADO)
-                .count();
+        long cantidadAprobadas = historialCompleto.stream().filter(i -> i.getEstadoInscripcion() == EstadoInscripcion.APROBADO).count();
 
-        // OJO: Aquí asumo que puedes obtener el total de materias de la carrera.
-        // Si no tienes ese dato directo, pon un número fijo o cuéntalas desde la entidad Carrera.
         int totalMateriasCarrera = 0;
         if (estudiante.getCarrera() != null && estudiante.getCarrera().getNumeroAsignaturas() != null) {
             totalMateriasCarrera = estudiante.getCarrera().getNumeroAsignaturas();
@@ -296,7 +289,7 @@ public class InscripcionService {
         }
         double cum = (contNotas > 0) ? (sumaNotas / contNotas) : 0.0;
 
-        Map<String, List<Inscripcion>> materiasPorCiclo = historialCompleto.stream().collect(Collectors.groupingBy(ins -> ins.getGrupo().getCiclo().toString()));
+        Map<String, List<Inscripcion>> materiasPorCiclo = historialCompleto.stream().collect(Collectors.groupingBy(ins -> ins.getGrupo().getCiclo().getNombre()));
 
         List<CicloDetalleDTO> listaCiclos = new ArrayList<>();
 
@@ -308,7 +301,7 @@ public class InscripcionService {
                     i.getGrupo().getAsignatura().getUv(),
                     i.getNotaFinal(),
                     i.getEstadoInscripcion().toString(),
-                    1 // Aquí podrías calcular si es 2da matrícula contando repeticiones previas
+                    1 // Aquí se podria calcular las inscripciones en segunda o tercera
             )).toList();
 
             listaCiclos.add(new CicloDetalleDTO(nombreCiclo, materiasDTO));

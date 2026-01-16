@@ -13,4 +13,6 @@ public interface EvaluacionRepository extends JpaRepository<Evaluacion, Long>{
 
     @Query("SELECT COALESCE(SUM(e.porcentaje), 0) FROM Evaluacion e WHERE e.inscripcion.idInscripcion = :idInscripcion")
     Double obtenerPorcentajeAcumulado(@Param("idInscripcion") Long idInscripcion);
+
+    List<Evaluacion> findByInscripcionIdInscripcion(Long idInscripcion);
 }

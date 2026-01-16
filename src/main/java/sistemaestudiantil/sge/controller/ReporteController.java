@@ -26,28 +26,6 @@ public class ReporteController {
         this.reporteService = reporteService;
     }
 
-    @GetMapping("/inscripcion/{idEstudiante}/data")
-    public ResponseEntity<ApiResponse<ComprobanteDTO>> obtenerDatosInscripcion(@PathVariable Long idEstudiante) {
-        ComprobanteDTO datos = reporteService.obtenerDatosComprobante(idEstudiante);
-        return ResponseEntity.ok(new ApiResponse<>(
-            "Datos de inscripción recuperados.",
-            datos,
-            true
-        ));
-    }
-
-    @GetMapping("/inscripcion/{idEstudiante}/pdf")
-    public void descargarPdfInscripcion(@PathVariable Long idEstudiante, HttpServletResponse response) throws IOException, DocumentException {
-
-        response.setContentType("application/pdf");
-
-        String headerKey = "Content-Disposition";
-        String headerValue = "attachment; filename=boleta_inscripcion_" + idEstudiante + ".pdf";
-        response.setHeader(headerKey, headerValue);
-
-        reporteService.generarBoletaPdf(response, idEstudiante);
-    }
-
     @GetMapping("/kardex/mis-notas") 
     public void descargarMiKardex(Authentication authentication, HttpServletResponse response) throws IOException, DocumentException {
         String carnetLogueado = authentication.getName(); 
@@ -73,8 +51,7 @@ public class ReporteController {
     public ResponseEntity<ApiResponse<ComprobanteDTO>> obtenerMisDatosInscripcion(Authentication authentication) {
         
         String carnetLogueado = authentication.getName();
-        
-        // Llamamos al nuevo método del servicio que busca por carnet
+
         ComprobanteDTO datos = reporteService.obtenerDatosComprobantePorUsuario(carnetLogueado);
         
         return ResponseEntity.ok(new ApiResponse<>(
@@ -84,7 +61,6 @@ public class ReporteController {
         ));
     }
 
-    // ✅ AHORA ES SEGURO: "Mi Boleta PDF"
     @GetMapping("/inscripcion/mi-boleta")
     public void descargarMiBoletaInscripcion(Authentication authentication, HttpServletResponse response) throws IOException, DocumentException {
 
@@ -95,7 +71,6 @@ public class ReporteController {
         String headerValue = "attachment; filename=boleta_inscripcion_personal.pdf";
         response.setHeader(headerKey, headerValue);
 
-        // Llamamos al nuevo método del servicio
         reporteService.generarBoletaPdfPorUsuario(response, carnetLogueado);
     }
 }
