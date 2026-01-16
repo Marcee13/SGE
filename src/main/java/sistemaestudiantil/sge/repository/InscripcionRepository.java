@@ -5,8 +5,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import sistemaestudiantil.sge.enums.CicloAcademico;
 import sistemaestudiantil.sge.enums.EstadoInscripcion;
+import sistemaestudiantil.sge.model.Ciclo;
 import sistemaestudiantil.sge.model.Estudiante;
 import sistemaestudiantil.sge.model.Grupo;
 import sistemaestudiantil.sge.model.Inscripcion;
@@ -29,10 +29,15 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long>{
     boolean existsByIdInscripcionAndGrupo_Profesor_Email(Long idInscripcion, String emailProfesor);
 
     @Query("SELECT i FROM Inscripcion i " + "WHERE i.estudiante.idEstudiante = :idEstudiante " + "AND i.grupo.asignatura.idAsignatura = :idAsignatura " + "AND i.grupo.ciclo = :ciclo")
-    Optional<Inscripcion> findInscripcionActiva(@Param("idEstudiante") Long idEstudiante, @Param("idAsignatura") Long idAsignatura, @Param("ciclo") CicloAcademico ciclo);
+    Optional<Inscripcion> findInscripcionActiva(@Param("idEstudiante") Long idEstudiante, @Param("idAsignatura") Long idAsignatura, @Param("ciclo") Ciclo ciclo);
     
     @Query("SELECT i FROM Inscripcion i WHERE i.grupo.ciclo = :ciclo AND i.estadoInscripcion = 'INSCRITO'")
-    List<Inscripcion> findPendientesDeCierre(@Param("ciclo") CicloAcademico ciclo);
+    List<Inscripcion> findPendientesDeCierre(@Param("ciclo") Ciclo ciclo);
+
+    @Query("SELECT i FROM Inscripcion i WHERE i.estudiante.idEstudiante = :idEstudiante " +
+       "AND (i.estadoInscripcion = 'APROBADO' OR i.estadoInscripcion = 'REPROBADO') " +
+       "ORDER BY i.grupo.ciclo.fechaInicio ASC") 
+       List<Inscripcion> findHistorialConNotas(@Param("idEstudiante") Long idEstudiante);
 
     @Query("SELECT CASE WHEN COUNT(i) > 0 THEN true ELSE false END " +
            "FROM Inscripcion i " +
@@ -54,7 +59,7 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long>{
            ")")
     List<Inscripcion> encontrarChoquesHorarioEstudiante(
            @Param("idEstudiante") Long idEstudiante,
-           @Param("ciclo") CicloAcademico ciclo,
+           @Param("ciclo") Ciclo ciclo,
            @Param("dias") String dias,
            @Param("horaInicio") LocalTime horaInicio,
            @Param("horaFin") LocalTime horaFin);
@@ -70,8 +75,9 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long>{
     @Query("SELECT COUNT(i) > 0 FROM Inscripcion i " +
            "WHERE i.estudiante.idEstudiante = :idEstudiante " +
            "AND i.grupo.asignatura.idAsignatura = :idAsignatura " +
-           "AND i.grupo.ciclo = :ciclo")
-    boolean yaEstaInscritoEnLaMateria(@Param("idEstudiante") Long idEstudiante, @Param("idAsignatura") Long idAsignatura, @Param("ciclo") CicloAcademico ciclo);
+           "AND i.grupo.ciclo = :ciclo " +
+           "AND i.estadoInscripcion = 'INSCRITO'")
+    boolean yaEstaInscritoEnLaMateria(@Param("idEstudiante") Long idEstudiante, @Param("idAsignatura") Long idAsignatura, @Param("ciclo") Ciclo ciclo);
 
     @Query("SELECT COUNT(i) > 0 FROM Inscripcion i " +
            "WHERE i.estudiante.idEstudiante = :idEstudiante " +

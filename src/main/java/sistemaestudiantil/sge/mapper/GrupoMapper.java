@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import sistemaestudiantil.sge.dto.GrupoDTO;
 import sistemaestudiantil.sge.model.Asignatura;
+import sistemaestudiantil.sge.model.Ciclo;
 import sistemaestudiantil.sge.model.Grupo;
 import sistemaestudiantil.sge.model.Profesor;
 
@@ -13,11 +14,14 @@ public class GrupoMapper {
         GrupoDTO dto=new GrupoDTO();
         dto.setIdGrupo(grupo.getIdGrupo());
         dto.setCodigoGrupo(grupo.getCodigoGrupo());
-        dto.setCiclo(grupo.getCiclo());
         dto.setCuposDisponibles(grupo.getCuposDisponibles());
         dto.setHoraFin(grupo.getHoraFin());
         dto.setHoraInicio(grupo.getHoraInicio());
         dto.setDias(grupo.getDias());
+        if (grupo.getCiclo() != null) {
+            dto.setIdCiclo(grupo.getCiclo().getIdCiclo());
+            dto.setNombreCiclo(grupo.getCiclo().getNombre());
+        }
 
         if (grupo.getAsignatura() != null) {
             dto.setIdAsignatura(grupo.getAsignatura().getIdAsignatura());
@@ -35,7 +39,6 @@ public class GrupoMapper {
     public Grupo toEntity(GrupoDTO dto){
         Grupo grupo =new Grupo();
         grupo.setIdGrupo(dto.getIdGrupo());
-        grupo.setCiclo(dto.getCiclo());
         grupo.setCodigoGrupo(dto.getCodigoGrupo());
         grupo.setCuposDisponibles(dto.getCuposDisponibles());
         grupo.setDias(dto.getDias());
@@ -52,6 +55,12 @@ public class GrupoMapper {
             Profesor profesor = new Profesor();
             profesor.setIdProfesor(dto.getIdProfesor());
             grupo.setProfesor(profesor);
+        }
+
+        if (dto.getIdCiclo() != null) {
+            Ciclo ciclo = new Ciclo();
+            ciclo.setIdCiclo(dto.getIdCiclo());
+            grupo.setCiclo(ciclo);
         }
 
         return grupo;

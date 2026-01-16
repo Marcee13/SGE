@@ -9,6 +9,7 @@ public class AsignaturaDTO {
     private Long idAsignatura;
     private String name;
     private int uv;
-
+    private String codigo;
     private List<Long> idsPrerrequisitos;
+    private Integer nivelCiclo;
 }

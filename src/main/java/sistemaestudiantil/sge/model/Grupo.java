@@ -4,7 +4,6 @@ import java.time.LocalTime;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import sistemaestudiantil.sge.enums.CicloAcademico;
 
 @Data
 @Entity
@@ -14,8 +13,6 @@ public class Grupo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idGrupo;
     private String codigoGrupo;
-    @Enumerated(EnumType.STRING)
-    private CicloAcademico ciclo;
     @ManyToOne
     @JoinColumn(name="idProfesor")
     private Profesor profesor;
@@ -30,4 +27,7 @@ public class Grupo {
     private LocalTime horaInicio;
     @Column(nullable = false)
     private LocalTime horaFin;
+    @ManyToOne
+    @JoinColumn(name = "id_ciclo", nullable = false)
+    private Ciclo ciclo;
 }

@@ -18,7 +18,7 @@ public class Inscripcion {
     private LocalDate fechaInscripcion;
     @Enumerated(EnumType.STRING)
     private EstadoInscripcion estadoInscripcion;
-    private double notaFinal;
+    private Double notaFinal;
     @ManyToOne
     @JoinColumn(name="idEstudiante", nullable = false)
     private Estudiante estudiante;

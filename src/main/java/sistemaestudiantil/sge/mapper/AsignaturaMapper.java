@@ -14,6 +14,8 @@ public class AsignaturaMapper {
         dto.setIdAsignatura(asignatura.getIdAsignatura());
         dto.setName(asignatura.getName());
         dto.setUv(asignatura.getUv());
+        dto.setCodigo(asignatura.getCodigo());
+        dto.setNivelCiclo(asignatura.getNivelCiclo());
         if (asignatura.getPrerrequisitos() != null && !asignatura.getPrerrequisitos().isEmpty()) {
             List<Long> ids = asignatura.getPrerrequisitos().stream()
                 .map(Asignatura::getIdAsignatura)
@@ -29,6 +31,8 @@ public class AsignaturaMapper {
         asignatura.setIdAsignatura(dto.getIdAsignatura());
         asignatura.setName(dto.getName());
         asignatura.setUv(dto.getUv());
+        asignatura.setCodigo(dto.getCodigo());
+        asignatura.setNivelCiclo(dto.getNivelCiclo());
         return asignatura;
     }
 }

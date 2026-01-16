@@ -11,6 +11,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import sistemaestudiantil.sge.response.ApiResponse;
 import tools.jackson.databind.exc.InvalidFormatException;
@@ -178,5 +179,16 @@ public class GlobalExceptionHandler {
             false
         );
         return new ResponseEntity<>(respuesta, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<String>> handleNotFound(NoResourceFoundException ex) {
+        
+        ApiResponse<String> response = new ApiResponse<>(
+            "El endpoint solicitado no existe. Por favor verifique la URL.",
+            "Ruta no encontrada: /" + ex.getResourcePath(),
+            false
+        );
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 }

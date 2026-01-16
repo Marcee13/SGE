@@ -1,9 +1,6 @@
 package sistemaestudiantil.sge.controller;
 
-import java.security.SecureClassLoader;
 import java.util.List;
-
-import javax.management.relation.Role;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import sistemaestudiantil.sge.dto.AvanceAcademicoDTO;
 import sistemaestudiantil.sge.dto.HistorialDTO;
 import sistemaestudiantil.sge.dto.InscripcionDTO;
 import sistemaestudiantil.sge.enums.Roles;
@@ -68,15 +66,36 @@ public class InscripcionController {
         if(auth==null||!auth.isAuthenticated()||"anonymousUser".equals(auth.getPrincipal())){
             throw new CredencialesInvalidasException("Sesión no valida. Inicie sesión nuevamente.");
         }
+
         String username =auth.getName();
         boolean esPersonal=auth.getAuthorities().stream().anyMatch(r->r.getAuthority().equals(Roles.ROLE_ADMIN.name())||r.getAuthority().equals(Roles.ROLE_ADMINISTRATIVO.name())||r.getAuthority().equals(Roles.ROLE_PROFESOR.name()));
+        
         Long idFinal=idEstudiante;
-        if(!esPersonal){
-            Estudiante estudianteLogueado=estudianteRepository.findByCarnetOrEmail(username, username).orElseThrow(()->new RecursoNoencontradoException("El estudiante no fue encontrado."));
-            idFinal=estudianteLogueado.getIdEstudiante();
+        Estudiante estudianteObjetivo;
+        
+        if (!esPersonal) {
+            estudianteObjetivo = estudianteRepository.findByCarnetOrEmail(username, username).orElseThrow(() -> new RecursoNoencontradoException("Error de sesión: Estudiante no encontrado."));
+
+            idFinal = estudianteObjetivo.getIdEstudiante();
+        } else {
+            estudianteObjetivo = estudianteRepository.findById(idEstudiante).orElseThrow(() -> new RecursoNoencontradoException("El estudiante con ID " + idEstudiante + " no existe."));
         }
+
         List<HistorialDTO> historial=service.obtenerHistorialEstudiante(idFinal);
-        return new ResponseEntity<>(new ApiResponse<>("Historial de notas obtenido.",historial,true),HttpStatus.OK);
+
+        if (historial.isEmpty()) {
+            return ResponseEntity.ok(new ApiResponse<>(
+                "El estudiante " + estudianteObjetivo.getCarnet() + " existe, pero aún no tiene notas registradas.", 
+                historial, 
+                true
+            ));
+        }
+
+        return ResponseEntity.ok(new ApiResponse<>(
+            "Historial académico de " + estudianteObjetivo.getCarnet() + " obtenido correctamente.",
+            historial,
+            true
+        ));
     }
     
     @PutMapping("/cambio-grupo")
@@ -91,7 +110,7 @@ public class InscripcionController {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
-            throw new CredencialesInvalidasException("Sesión inválida");
+            throw new CredencialesInvalidasException("Sesión inválida. Inicie sesión nuevamente.");
         }
         
         String username = auth.getName();
@@ -106,5 +125,29 @@ public class InscripcionController {
             true
         );
         return ResponseEntity.ok(respuesta);
+    }
+
+    @GetMapping("/avance-curricular/{idEstudiante}")
+    public ResponseEntity<ApiResponse<AvanceAcademicoDTO>> verAvanceCurricular(@PathVariable Long idEstudiante) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) throw new CredencialesInvalidasException("Sesión inválida. Inicie sesión nuevamente.");
+        
+        String username = auth.getName();
+        boolean esPersonal = auth.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.ROLE_ADMIN.name()) || r.getAuthority().equals(Roles.ROLE_PROFESOR.name())||r.getAuthority().equals(Roles.ROLE_ADMINISTRATIVO.name()));
+
+        Long idFinal = idEstudiante;
+
+        if (!esPersonal) {
+            Estudiante est = estudianteRepository.findByCarnetOrEmail(username, username).orElseThrow(() -> new RecursoNoencontradoException("Estudiante no encontrado"));
+            idFinal = est.getIdEstudiante();
+        }
+
+        AvanceAcademicoDTO avance = service.obtenerKardex(idFinal);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+            "Avance curricular cargado con éxito.",
+            avance,
+            true
+        ));
     }
 }

@@ -1,15 +1,20 @@
 package sistemaestudiantil.sge.service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import sistemaestudiantil.sge.dto.AvanceAcademicoDTO;
+import sistemaestudiantil.sge.dto.CicloDetalleDTO;
 import sistemaestudiantil.sge.dto.EvaluacionDTO;
 import sistemaestudiantil.sge.dto.HistorialDTO;
 import sistemaestudiantil.sge.dto.InscripcionDTO;
-import sistemaestudiantil.sge.enums.CicloAcademico;
+import sistemaestudiantil.sge.dto.MateriaKardexDTO;
 import sistemaestudiantil.sge.enums.EstadoInscripcion;
 import sistemaestudiantil.sge.enums.Roles;
 import sistemaestudiantil.sge.exceptions.DuplicadoException;
@@ -17,9 +22,11 @@ import sistemaestudiantil.sge.exceptions.OperacionNoPermitidaException;
 import sistemaestudiantil.sge.exceptions.RecursoNoencontradoException;
 import sistemaestudiantil.sge.mapper.InscripcionMapper;
 import sistemaestudiantil.sge.model.Asignatura;
+import sistemaestudiantil.sge.model.Ciclo;
 import sistemaestudiantil.sge.model.Estudiante;
 import sistemaestudiantil.sge.model.Grupo;
 import sistemaestudiantil.sge.model.Inscripcion;
+import sistemaestudiantil.sge.repository.CicloRepository;
 import sistemaestudiantil.sge.repository.EstudianteRepository;
 import sistemaestudiantil.sge.repository.EvaluacionRepository;
 import sistemaestudiantil.sge.repository.GrupoRespository;
@@ -33,9 +40,11 @@ public class InscripcionService {
     private final InscripcionRepository inscripcionRepository;
     private final InscripcionMapper inscripcionMapper;
     private final EvaluacionRepository evaluacionRepository;
+    private final CicloRepository cicloRepository;
 
-    public InscripcionService(GrupoRespository gRespository, EvaluacionRepository evaluacionRepository, InscripcionMapper inscripcionMapper, EstudianteRepository eRepository, InscripcionRepository iRepository){
+    public InscripcionService(GrupoRespository gRespository, CicloRepository cicloRepository, EvaluacionRepository evaluacionRepository, InscripcionMapper inscripcionMapper, EstudianteRepository eRepository, InscripcionRepository iRepository){
         this.grupoRespository = gRespository;
+        this.cicloRepository=cicloRepository;
         this.evaluacionRepository=evaluacionRepository;
         this.inscripcionMapper=inscripcionMapper;
         this.estudianteRepository = eRepository;
@@ -63,7 +72,7 @@ public class InscripcionService {
         }
 
         Long idAsignatura = grupo.getAsignatura().getIdAsignatura();
-        CicloAcademico cicloActual = grupo.getCiclo();
+        Ciclo cicloActual = grupo.getCiclo();
 
         boolean yaTieneLaMateria = inscripcionRepository.yaEstaInscritoEnLaMateria(estudiante.getIdEstudiante(), idAsignatura, cicloActual);
 
@@ -136,7 +145,7 @@ public class InscripcionService {
         return inscripciones.stream().map(inscripcion -> {
             HistorialDTO dto = new HistorialDTO();
             dto.setNombreMateria(inscripcion.getGrupo().getAsignatura().getName());
-            dto.setCiclo(inscripcion.getGrupo().getCiclo().name());
+            dto.setCiclo(inscripcion.getGrupo().getCiclo().getNombre());
             dto.setEstado(inscripcion.getEstadoInscripcion().name());
             dto.setNotaFinal(inscripcion.getNotaFinal());
 
@@ -195,13 +204,18 @@ public class InscripcionService {
     }
 
     @Transactional
-    public String cerrarCiclo(CicloAcademico ciclo) {
+    public String cerrarCiclo(Long idCiclo) {
+        Ciclo ciclo = cicloRepository.findById(idCiclo).orElseThrow(() -> new RecursoNoencontradoException("Ciclo no encontrado"));
+
         List<Inscripcion> pendientes = inscripcionRepository.findPendientesDeCierre(ciclo);
         
         int aprobados = 0;
         int reprobados = 0;
 
         for (Inscripcion i : pendientes) {
+            if (i.getNotaFinal() == null) {
+                i.setNotaFinal(0.0);
+            }
             if (i.getNotaFinal() >= 6.0) {
                 i.setEstadoInscripcion(EstadoInscripcion.APROBADO);
                 aprobados++;
@@ -213,8 +227,12 @@ public class InscripcionService {
 
         inscripcionRepository.saveAll(pendientes);
 
-        return "Cierre del ciclo " + ciclo + " completado. " + 
-               aprobados + " aprobados, " + reprobados + " reprobados.";
+        if (Boolean.TRUE.equals(ciclo.getActivo())) {
+            ciclo.setActivo(false);
+            cicloRepository.save(ciclo);
+        }
+
+        return "Cierre del " + ciclo.getNombre() + " completado." + aprobados + " aprobados, " + reprobados + " reprobados.";
     }
 
     @Transactional
@@ -246,5 +264,66 @@ public class InscripcionService {
 
         Inscripcion guardada = inscripcionRepository.save(inscripcion);
         return inscripcionMapper.toDTO(guardada);
+    }
+
+    public AvanceAcademicoDTO obtenerKardex(Long idEstudiante) {
+
+        Estudiante estudiante = estudianteRepository.findById(idEstudiante).orElseThrow(() -> new RecursoNoencontradoException("Estudiante no encontrado"));
+        
+        List<Inscripcion> historialCompleto = inscripcionRepository.findHistorialCompleto(idEstudiante);
+
+        long cantidadAprobadas = historialCompleto.stream()
+                .filter(i -> i.getEstadoInscripcion() == EstadoInscripcion.APROBADO)
+                .count();
+
+        // OJO: Aquí asumo que puedes obtener el total de materias de la carrera.
+        // Si no tienes ese dato directo, pon un número fijo o cuéntalas desde la entidad Carrera.
+        int totalMateriasCarrera = 0;
+        if (estudiante.getCarrera() != null && estudiante.getCarrera().getNumeroAsignaturas() != null) {
+            totalMateriasCarrera = estudiante.getCarrera().getNumeroAsignaturas();
+        }
+        if (totalMateriasCarrera == 0) totalMateriasCarrera = 1; 
+
+        double porcentaje = ((double) cantidadAprobadas / totalMateriasCarrera) * 100.0;
+
+        double sumaNotas = 0;
+        int contNotas = 0;
+        for (Inscripcion i : historialCompleto) {
+            if (i.getEstadoInscripcion() == EstadoInscripcion.APROBADO ||i.getEstadoInscripcion() == EstadoInscripcion.REPROBADO) {
+                sumaNotas += i.getNotaFinal();
+                contNotas++;
+            }
+        }
+        double cum = (contNotas > 0) ? (sumaNotas / contNotas) : 0.0;
+
+        Map<String, List<Inscripcion>> materiasPorCiclo = historialCompleto.stream().collect(Collectors.groupingBy(ins -> ins.getGrupo().getCiclo().toString()));
+
+        List<CicloDetalleDTO> listaCiclos = new ArrayList<>();
+
+        materiasPorCiclo.forEach((nombreCiclo, inscripciones) -> {
+
+            List<MateriaKardexDTO> materiasDTO = inscripciones.stream().map(i -> new MateriaKardexDTO(
+                    i.getGrupo().getAsignatura().getCodigo(),
+                    i.getGrupo().getAsignatura().getName(),
+                    i.getGrupo().getAsignatura().getUv(),
+                    i.getNotaFinal(),
+                    i.getEstadoInscripcion().toString(),
+                    1 // Aquí podrías calcular si es 2da matrícula contando repeticiones previas
+            )).toList();
+
+            listaCiclos.add(new CicloDetalleDTO(nombreCiclo, materiasDTO));
+        });
+
+        AvanceAcademicoDTO respuesta = new AvanceAcademicoDTO();
+        respuesta.setNombreEstudiante(estudiante.getNombres() + " " + estudiante.getApellidos());
+        respuesta.setCarnet(estudiante.getCarnet());
+        respuesta.setNombreCarrera(estudiante.getCarrera() != null ? estudiante.getCarrera().getNombreCarrera() : "Sin Carrera");
+        respuesta.setMateriasAprobadas((int) cantidadAprobadas);
+        respuesta.setTotalMateriasPlan(totalMateriasCarrera);
+        respuesta.setPorcentajeAvance(Math.round(porcentaje * 100.0) / 100.0);
+        respuesta.setCum(Math.round(cum * 100.0) / 100.0);
+        respuesta.setCiclos(listaCiclos);
+
+        return respuesta;
     }
 }

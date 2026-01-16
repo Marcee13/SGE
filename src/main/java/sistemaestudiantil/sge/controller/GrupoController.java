@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import sistemaestudiantil.sge.dto.GrupoDTO;
+import sistemaestudiantil.sge.dto.ProgramacionGrupoDTO;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -79,5 +81,16 @@ public class GrupoController {
             true
         );
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{idGrupo}/programar")
+    public ResponseEntity<ApiResponse<GrupoDTO>> programarGrupo(@PathVariable Long idGrupo, @RequestBody ProgramacionGrupoDTO dto) {
+        GrupoDTO grupoActualizado = service.programarGrupo(idGrupo, dto);
+        ApiResponse<GrupoDTO> respuesta = new ApiResponse<>(
+            "Grupo programado exitosamente.",
+            grupoActualizado,
+            true
+        );
+        return ResponseEntity.ok(respuesta);
     }
 }

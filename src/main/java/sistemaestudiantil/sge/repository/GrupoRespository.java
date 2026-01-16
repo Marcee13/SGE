@@ -8,13 +8,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import sistemaestudiantil.sge.enums.CicloAcademico;
 import sistemaestudiantil.sge.model.Asignatura;
+import sistemaestudiantil.sge.model.Ciclo;
 import sistemaestudiantil.sge.model.Grupo;
 
 @Repository
 public interface GrupoRespository extends JpaRepository<Grupo,Long>{
-    boolean existsByCodigoGrupoAndAsignaturaAndCiclo(String codigoGrupo, Asignatura asignatura, CicloAcademico ciclo);
+    boolean existsByCodigoGrupoAndAsignaturaAndCiclo(String codigoGrupo, Asignatura asignatura, Ciclo ciclo);
 
     @Query("SELECT g FROM Grupo g " +
            "WHERE g.profesor.idProfesor = :idProfesor " +
@@ -24,7 +24,7 @@ public interface GrupoRespository extends JpaRepository<Grupo,Long>{
            "   (:horaInicio < g.horaFin) AND (:horaFin > g.horaInicio) " +
            ")")
     List<Grupo> encontrarGruposEnConflicto(@Param("idProfesor") Long idProfesor,
-                                           @Param("ciclo") CicloAcademico ciclo,
+                                           @Param("ciclo") Ciclo ciclo,
                                            @Param("dias") String dias,
                                            @Param("horaInicio") LocalTime horaInicio,
                                            @Param("horaFin") LocalTime horaFin);
@@ -39,7 +39,7 @@ public interface GrupoRespository extends JpaRepository<Grupo,Long>{
            "   (g.horaInicio BETWEEN :horaInicio AND :horaFin)" +
            ")")
     boolean existeChoqueHorario(@Param("idProfesor") Long idProfesor,
-                                @Param("ciclo") CicloAcademico ciclo,
+                                @Param("ciclo") Ciclo ciclo,
                                 @Param("dias") String dias,
                                 @Param("horaInicio") LocalTime horaInicio,
                                 @Param("horaFin") LocalTime horaFin);
