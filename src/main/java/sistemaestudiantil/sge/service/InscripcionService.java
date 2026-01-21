@@ -87,6 +87,16 @@ public class InscripcionService {
 
         Asignatura asignaturaObjetivo = grupo.getAsignatura();
 
+        boolean yaLaAprobo = inscripcionRepository.haAprobadoMateria(
+            estudiante.getIdEstudiante(), 
+            idAsignatura,
+            EstadoInscripcion.APROBADO
+        );
+
+        if (yaLaAprobo) {
+            throw new OperacionNoPermitidaException("¡Ya aprobaste esta materia anteriormente! No puedes volver a cursarla.");
+        }
+
         if(asignaturaObjetivo.getPrerrequisitos() != null && !asignaturaObjetivo.getPrerrequisitos().isEmpty()){
             for(Asignatura requisito : asignaturaObjetivo.getPrerrequisitos()){
                 boolean aprobado = inscripcionRepository.haAprobadoMateria(

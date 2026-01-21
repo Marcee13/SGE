@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,6 +28,7 @@ public class FacultadController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')or hasAuthority('ROLE_ADMINISTRATIVO')")
     public ResponseEntity<ApiResponse<List<FacultadDTO>>> listar() {
         return ResponseEntity.ok(new ApiResponse<>(
             "Lista de facultades", 
@@ -35,6 +37,7 @@ public class FacultadController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')or hasAuthority('ROLE_ADMINISTRATIVO')")
     public ResponseEntity<ApiResponse<FacultadDTO>> crear(@RequestBody FacultadDTO dto) {
         return ResponseEntity.ok(new ApiResponse<>(
             "Facultad creada", 
@@ -43,6 +46,7 @@ public class FacultadController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')or hasAuthority('ROLE_ADMINISTRATIVO')")
     public ResponseEntity<ApiResponse<FacultadDTO>> actualizar(@PathVariable Long id, @RequestBody FacultadDTO dto) {
         FacultadDTO actualizar = service.actualizarFacultad(id, dto);
         ApiResponse<FacultadDTO> respuesta= new ApiResponse<>(

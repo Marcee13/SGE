@@ -2,6 +2,7 @@ package sistemaestudiantil.sge.repository;
 
 import org.springframework.stereotype.Repository;
 
+import sistemaestudiantil.sge.dto.ItemEstadisticoDTO;
 import sistemaestudiantil.sge.enums.EstadoEstudiante;
 import sistemaestudiantil.sge.model.Estudiante;
 
@@ -33,4 +34,10 @@ public interface EstudianteRepository extends JpaRepository<Estudiante,Long> {
     Optional<Estudiante> findByCarnet(String carnet);
 
     Optional<Estudiante> findByCarnetOrEmail(String carnet, String email);
+
+    @Query("SELECT new sistemaestudiantil.sge.dto.ItemEstadisticoDTO(e.carrera.nombreCarrera, COUNT(e)) " +
+       "FROM Estudiante e GROUP BY e.carrera.nombreCarrera")
+       List<ItemEstadisticoDTO> contarEstudiantesPorCarrera();
+       
+    long count();
 }

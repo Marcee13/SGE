@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,6 +27,7 @@ public class AsignaturaController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_PROFESOR') or hasAuthority('ROLE_ADMINISTRATIVO')")
      public ResponseEntity<ApiResponse<List<AsignaturaDTO>>> listarTodos(){
         List<AsignaturaDTO> lista = service.obtenerTodos();
         ApiResponse<List<AsignaturaDTO>> respuesta = new ApiResponse<>(
@@ -37,6 +39,7 @@ public class AsignaturaController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_PROFESOR') or hasAuthority('ROLE_ADMINISTRATIVO')")
     public ResponseEntity<ApiResponse<AsignaturaDTO>> guardar(@RequestBody AsignaturaDTO dto) {
         AsignaturaDTO nuevaAsignatura = service.crearAsignatura(dto);
         

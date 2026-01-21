@@ -134,8 +134,7 @@ public class EvaluacionService {
         boolean esPersonal = tieneRol(auth, Roles.ROLE_ADMIN) || tieneRol(auth, Roles.ROLE_ADMINISTRATIVO) || tieneRol(auth, Roles.ROLE_PROFESOR);
 
         if (!esPersonal) {
-            Estudiante estudiante = estudianteRepository.findByCarnet(username)
-                    .orElseThrow(() -> new RecursoNoencontradoException("Usuario no encontrado."));
+            Estudiante estudiante = estudianteRepository.findByCarnet(username).orElseThrow(() -> new RecursoNoencontradoException("Usuario no encontrado."));
 
             boolean esSuya = inscripcionRepository.existsByIdInscripcionAndEstudiante_IdEstudiante(
                     idInscripcion, 

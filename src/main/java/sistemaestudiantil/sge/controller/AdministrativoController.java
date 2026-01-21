@@ -39,6 +39,7 @@ public class AdministrativoController {
     }
 
     @PostMapping("/cierre-ciclo")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_ADMINISTRATIVO')")
     public ResponseEntity<ApiResponse<String>> ejecutarCierre(@RequestParam Long idCiclo){
         String resultado=inscripcionService.cerrarCiclo(idCiclo);
         ApiResponse<String> respuesta=new ApiResponse<>(
@@ -49,6 +50,7 @@ public class AdministrativoController {
     }
 
     @PostMapping("/cierre-admision")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_ADMINISTRATIVO')")
     public ResponseEntity<ApiResponse<List<EstudianteDTO>>> cerrarAdmision(@RequestParam Integer anioIngreso) {
         
         List<EstudianteDTO> nuevosEstudiantes = estudianteService.cerrarCicloAdmision(anioIngreso);
@@ -63,6 +65,7 @@ public class AdministrativoController {
     }
 
     @PostMapping("/generar-oferta/{idCiclo}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_ADMINISTRATIVO')")
     public ResponseEntity<ApiResponse<String>> generarOferta(@PathVariable Long idCiclo) {
         
         String resultado = administrativoService.generarOfertaAcademica(idCiclo);
@@ -77,6 +80,7 @@ public class AdministrativoController {
     }
 
     @PostMapping("/crear-ciclo")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_ADMINISTRATIVO')")
     public ResponseEntity<ApiResponse<Ciclo>> crearCiclo(@RequestBody CicloDTO dto) {
         
         Ciclo nuevo = administrativoService.crearCiclo(dto);
@@ -91,6 +95,7 @@ public class AdministrativoController {
     }
 
     @PutMapping("/{id}/activar")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_ADMINISTRATIVO')")
     public ResponseEntity<ApiResponse<Ciclo>> activarCiclo(@PathVariable Long id) {
         
         Ciclo ciclo = administrativoService.activarCiclo(id);
@@ -105,6 +110,7 @@ public class AdministrativoController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_ADMINISTRATIVO')")
     public ResponseEntity<ApiResponse<List<Ciclo>>> listarCiclos() {
         
         List<Ciclo> listaCiclos = administrativoService.listarTodos();

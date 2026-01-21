@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,6 +30,7 @@ public class CarreraController {
     }
 
     @GetMapping()
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')or hasAuthority('ROLE_ADMINISTRATIVO')")
     public ResponseEntity<ApiResponse<List<CarreraDTO>>> listarTodos(){
         List<CarreraDTO> lista=service.listarCarreras();
         ApiResponse<List<CarreraDTO>> respuesta= new ApiResponse<>(
@@ -40,6 +42,7 @@ public class CarreraController {
     }
 
     @PostMapping()
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')or hasAuthority('ROLE_ADMINISTRATIVO')")
     public ResponseEntity<ApiResponse<CarreraDTO>> guardarCarrera(@RequestBody CarreraDTO dto) {
         CarreraDTO nuevaCarrera = service.crearCarrera(dto);
         
@@ -52,6 +55,7 @@ public class CarreraController {
     }
     
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')or hasAuthority('ROLE_ADMINISTRATIVO')")
     public ResponseEntity<ApiResponse<CarreraDTO>> actualizarCarrera(@PathVariable Long id, @RequestBody CarreraDTO dto) {
         CarreraDTO actualizado=service.actualizarCarrera(id, dto);
 

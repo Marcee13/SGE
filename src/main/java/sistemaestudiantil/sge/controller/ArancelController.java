@@ -3,6 +3,7 @@ package sistemaestudiantil.sge.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,12 +24,14 @@ public class ArancelController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_ADMINISTRATIVO')")
     public ResponseEntity<ArancelDTO> configurarPrecio(@RequestBody ArancelDTO dto) {
         ArancelDTO resultado = arancelService.guardarArancel(dto);
         return ResponseEntity.ok(resultado);
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_ADMINISTRATIVO')")
      public ResponseEntity<ApiResponse<List<ArancelDTO>>> listarTodos(){
         List<ArancelDTO> lista = arancelService.obtenerTodos();
         ApiResponse<List<ArancelDTO>> respuesta = new ApiResponse<>(
