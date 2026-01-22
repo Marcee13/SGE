@@ -34,3 +34,9 @@ build/
 
 ### Otros ###
 application.properties
+
+#para descartar todos los archivos
+uploads/*
+
+#para no ignorar la carpeta así como el archivo .gitkeep pero si los demás archivos, es decir las imágenes
+!uploads/.gitkeep

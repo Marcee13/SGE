@@ -44,6 +44,8 @@ public class Estudiante {
     @Column(name = "debe_cambiar_clave")
     private Boolean debeCambiarClave=false;
     private Roles rol;
+    @Column(name = "foto_perfil")
+    private String fotoPerfil;
 
     @ManyToOne
     @JoinColumn(name = "id_carrera")
