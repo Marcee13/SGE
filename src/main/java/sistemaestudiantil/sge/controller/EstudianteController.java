@@ -36,6 +36,7 @@ public class EstudianteController {
     private final StorageService storageService;
     private final EstudianteRepository estudianteRepository;
     private static final Logger logger = LoggerFactory.getLogger(EstudianteController.class);
+    private static final String MSJ_ESTUDIANTE_NO_ENCONTRADO = "Estudiante con ID %d no encontrado.";
 
     public EstudianteController(EstudianteService service, StorageService storageService, EstudianteRepository estudianteRepository){
         this.service = service;
@@ -121,12 +122,10 @@ public class EstudianteController {
     }
 
    @PostMapping("/{id}/foto")
-    // @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATIVO')") // Descomenta si usas seguridad
-    public ResponseEntity<ApiResponse<String>> subirFotoPerfil(
-            @PathVariable Long id, 
-            @RequestParam("file") MultipartFile file) {
+    // @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATIVO')")
+    public ResponseEntity<ApiResponse<String>> subirFotoPerfil(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
 
-        Estudiante estudiante = estudianteRepository.findById(id).orElseThrow(() -> new RecursoNoencontradoException("Estudiante con ID " + id + " no encontrado."));
+        Estudiante estudiante = estudianteRepository.findById(id).orElseThrow(() -> new RecursoNoencontradoException((String.format(MSJ_ESTUDIANTE_NO_ENCONTRADO, id))));
 
         String nombreArchivo = storageService.almacenarArchivo(file);
 
@@ -140,8 +139,66 @@ public class EstudianteController {
         ));
     }
 
-    @GetMapping("/foto/{filename:.+}")
-    public ResponseEntity<Resource> verFoto(@PathVariable String filename) {
+    @PostMapping("/{id}/titulo-bachiller")
+    // @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATIVO')")
+    public ResponseEntity<ApiResponse<String>> subirTitulo(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+
+        Estudiante estudiante = estudianteRepository.findById(id).orElseThrow(() -> new RecursoNoencontradoException((String.format(MSJ_ESTUDIANTE_NO_ENCONTRADO, id))));
+
+        String nombreArchivo = storageService.almacenarArchivo(file);
+
+        estudiante.setDocumentoTitulo(nombreArchivo);
+        estudianteRepository.save(estudiante);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+            "Documento de título de bachiller subido correctamente.",
+            nombreArchivo,
+            true
+        ));
+    }
+
+    @PostMapping("/{id}/dui")
+    // @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATIVO')")
+    public ResponseEntity<ApiResponse<String>> subirDUI(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+
+        Estudiante estudiante = estudianteRepository.findById(id).orElseThrow(() -> new RecursoNoencontradoException((String.format(MSJ_ESTUDIANTE_NO_ENCONTRADO, id))));
+
+        String nombreArchivo = storageService.almacenarArchivo(file);
+
+        estudiante.setDocumentoDUI(nombreArchivo);
+        estudianteRepository.save(estudiante);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+            "Documento DUI subido correctamente.",
+            nombreArchivo,
+            true
+        ));
+    }
+
+    @PostMapping("/{id}/nit")
+    // @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATIVO')")
+    public ResponseEntity<ApiResponse<String>> subirNIT(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+
+        Estudiante estudiante = estudianteRepository.findById(id).orElseThrow(() -> new RecursoNoencontradoException((String.format(MSJ_ESTUDIANTE_NO_ENCONTRADO, id))));
+
+        String nombreArchivo = storageService.almacenarArchivo(file);
+
+        estudiante.setDocumentoNIT(nombreArchivo);
+        estudianteRepository.save(estudiante);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+            "Documento NIT subido correctamente.",
+            nombreArchivo,
+            true
+        ));
+    }
+
+    @GetMapping({
+        "/foto/{filename:.+}",
+        "/documento/{filename:.+}",
+        "/archivo/{filename:.+}"
+    })
+    public ResponseEntity<Resource> verArchivo(@PathVariable String filename) {
         
         Resource file = storageService.cargarComoRecurso(filename);
         

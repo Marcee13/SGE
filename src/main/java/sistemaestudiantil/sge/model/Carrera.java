@@ -1,5 +1,8 @@
 package sistemaestudiantil.sge.model;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -21,6 +24,10 @@ public class Carrera {
     private Integer numeroAsignaturas;
 
     @ManyToOne
+    @JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class, 
+        property = "id"
+    )
     @JoinColumn(name="id_facultad")
     private Facultad facultad;
 }

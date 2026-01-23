@@ -1,5 +1,8 @@
 package sistemaestudiantil.sge.model;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -17,6 +20,10 @@ public class Evaluacion {
     @Column(nullable = false)
     private Double notaObtenida;
     @ManyToOne
+    @JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class, 
+        property = "id"
+    )
     @JoinColumn(name="idInscripcion", nullable=false)
     private Inscripcion inscripcion;
 }

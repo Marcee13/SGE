@@ -2,6 +2,9 @@ package sistemaestudiantil.sge.model;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import sistemaestudiantil.sge.enums.EstadoEstudiante;
@@ -17,7 +20,7 @@ public class Estudiante {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long idEstudiante;
-    @Column (name="carnet", unique=true, nullable=true) //Se indica a la base que le campo puede ser null y en su momento sera unico.
+    @Column (name="carnet", unique=true, nullable=true)
     private String carnet;
     private String nombres;
     private String apellidos;
@@ -46,8 +49,18 @@ public class Estudiante {
     private Roles rol;
     @Column(name = "foto_perfil")
     private String fotoPerfil;
+    @Column(name = "documento_titulo")
+    private String documentoTitulo;
+    @Column(name = "documento_DUI")
+    private String documentoDUI;
+    @Column(name = "documento_NIT")
+    private String documentoNIT;
 
     @ManyToOne
+    @JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class, 
+        property = "id"
+    )
     @JoinColumn(name = "id_carrera")
     private Carrera carrera;
 
