@@ -27,6 +27,7 @@ public class ArancelService {
         arancel.setCodigo(dto.getCodigo());
         arancel.setNombre(dto.getNombre());
         arancel.setCosto(dto.getCosto());
+        arancel.setEsPorcentaje(dto.getEsPorcentaje());
 
         Arancel guardado = arancelRepository.save(arancel);
         

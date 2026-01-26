@@ -1,5 +1,6 @@
 package sistemaestudiantil.sge.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -17,6 +18,7 @@ public class Pago {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idPago;
     private Long codigoPago;
+    private String observaciones;
 
     @ManyToOne
     @JsonIdentityInfo(
@@ -35,7 +37,8 @@ public class Pago {
     @JoinColumn(name = "id_arancel")
     private Arancel arancel;
     
-    private Double monto;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal monto;
     private LocalDate fechaVencimiento;
     private LocalDate fechaPago;
     @Enumerated(EnumType.STRING)

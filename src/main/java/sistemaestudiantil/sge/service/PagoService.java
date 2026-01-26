@@ -1,5 +1,7 @@
 package sistemaestudiantil.sge.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,6 +9,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import sistemaestudiantil.sge.dto.CorteDiarioDTO;
+import sistemaestudiantil.sge.dto.DetalleCorteDTO;
 import sistemaestudiantil.sge.dto.PagoDTO;
 import sistemaestudiantil.sge.enums.EstadoPago;
 import sistemaestudiantil.sge.enums.TipoArancel;
@@ -65,11 +69,18 @@ public class PagoService {
 
     @Transactional
     public void generarTalonarioAnual(Estudiante estudiante, int anio) {
+
+        if (pagoRepository.existeTalonario(estudiante.getIdEstudiante(), anio)) {
+            throw new OperacionNoPermitidaException(
+                "El estudiante ya tiene generado el talonario para el año " + anio
+            );
+        }
+
         List<Pago> talonario = new ArrayList<>();
 
-        Arancel arancelMatricula = arancelRepository.findByCodigo("MATRICULA").orElseThrow(() -> new RecursoNoencontradoException("Falta configurar precio MATRICULA"));
+        Arancel arancelMatricula = arancelRepository.findByCodigo("MATRICULA").orElseThrow(() -> new RecursoNoencontradoException("Falta configurar el arancel MATRICULA"));
 
-        Arancel arancelMensualidad = arancelRepository.findByCodigo("MENSUALIDAD").orElseThrow(() -> new RecursoNoencontradoException("Falta configurar precio MENSUALIDAD"));
+        Arancel arancelMensualidad = arancelRepository.findByCodigo("MENSUALIDAD").orElseThrow(() -> new RecursoNoencontradoException("Falta configurar el arancel MENSUALIDAD"));
 
         Pago matricula = new Pago();
         matricula.setEstudiante(estudiante);
@@ -99,14 +110,37 @@ public class PagoService {
 
     @Transactional
     public PagoDTO registrarPago(Long codigoPago) {
-        Pago pago = pagoRepository.findByCodigoPago(codigoPago)
-                .orElseThrow(() -> new RecursoNoencontradoException("No se encontró el recibo con código: " + codigoPago));
+        Pago pago = pagoRepository.findByCodigoPago(codigoPago).orElseThrow(() -> new RecursoNoencontradoException("No se encontró el recibo con código: " + codigoPago));
+
+        if (pago.getEstado() == EstadoPago.ANULADO) {
+            throw new OperacionNoPermitidaException("No se puede cobrar un recibo que ha sido ANULADO.");
+        }
 
         if (pago.getEstado() == EstadoPago.PAGADO) {
             throw new OperacionNoPermitidaException("Este recibo ya fue pagado el día: " + pago.getFechaPago());
         }
 
-        pago.setFechaPago(LocalDate.now());
+        LocalDate hoy = LocalDate.now();
+        if (hoy.isAfter(pago.getFechaVencimiento())) {
+            Arancel arancelMora = arancelRepository.findByCodigo("MORA").orElseThrow(() -> new RecursoNoencontradoException("No hay arancel de MORA configurado"));
+
+            BigDecimal recargo;
+
+            if(Boolean.TRUE.equals(arancelMora.getEsPorcentaje())){
+                BigDecimal porcentaje = arancelMora.getCosto().divide(new BigDecimal(100), 4, RoundingMode.HALF_UP);
+                recargo = pago.getMonto().multiply(porcentaje);
+            } else {
+                recargo = arancelMora.getCosto();
+            }
+
+            BigDecimal nuevoTotal=pago.getMonto().add(recargo).setScale(2,RoundingMode.HALF_UP);
+
+            pago.setMonto(nuevoTotal);
+
+            pago.setObservaciones("Recargo aplicado: $" + recargo.setScale(2, RoundingMode.HALF_UP));
+        }
+
+        pago.setFechaPago(hoy);
         pago.setEstado(EstadoPago.PAGADO);
 
         Pago pagoRealizado = pagoRepository.save(pago);
@@ -114,10 +148,15 @@ public class PagoService {
         return pagoMapper.toDTO(pagoRealizado);
     }
 
-    //listar TODOS los pagos por estudiante ordenados por fecha de vencimiento
-    public List<PagoDTO> listarPagosPorEstudiante(Long idEstudiante) {
-        return pagoRepository.findByEstudiante_IdEstudianteOrderByFechaVencimientoAsc(idEstudiante)
-                .stream()
+    //listar TODOS los pagos por estudiante ordenados por fecha de vencimiento y año opcional
+    public List<PagoDTO> listarPagosPorEstudiante(Long idEstudiante, Integer anio) {
+        List<Pago> pagos;
+        if (anio != null) {
+            pagos = pagoRepository.findByEstudianteAndAnio(idEstudiante, anio);
+        } else {
+            pagos = pagoRepository.findByEstudiante_IdEstudianteOrderByFechaVencimientoAsc(idEstudiante);
+        }
+        return pagos.stream()
                 .map(pagoMapper::toDTO)
                 .toList();
     }
@@ -133,5 +172,70 @@ public class PagoService {
     private Long generarNPE(int anio, int codigoTipo, Long estudianteId) {
         String codigoStr = String.format("%d%02d%06d", anio, codigoTipo, estudianteId);
         return Long.parseLong(codigoStr);
+    }
+
+    @Transactional
+    public void anularPago(Long codigoPago, String motivo, boolean regenerarDeuda) {
+        Pago pagoOriginal = pagoRepository.findByCodigoPago(codigoPago).orElseThrow(() -> new RecursoNoencontradoException("Pago no encontrado: " + codigoPago));
+
+        if (pagoOriginal.getEstado() == EstadoPago.ANULADO) {
+            throw new OperacionNoPermitidaException("El pago ya está anulado.");
+        }
+
+        pagoOriginal.setEstado(EstadoPago.ANULADO);
+        pagoOriginal.setObservaciones("ANULADO: " + motivo + " | Fecha: " + LocalDate.now());
+
+        pagoRepository.save(pagoOriginal);
+
+        if (regenerarDeuda) {
+            Pago nuevoPago = new Pago();
+
+            nuevoPago.setEstudiante(pagoOriginal.getEstudiante());
+            nuevoPago.setArancel(pagoOriginal.getArancel());
+
+            nuevoPago.setMonto(pagoOriginal.getArancel().getCosto()); 
+            
+            nuevoPago.setFechaVencimiento(pagoOriginal.getFechaVencimiento());
+            nuevoPago.setEstado(EstadoPago.PENDIENTE);
+            
+            int anio = pagoOriginal.getFechaVencimiento().getYear();
+            int mesOriginal = pagoOriginal.getFechaVencimiento().getMonthValue();
+
+            int codigoTipoCorreccion=mesOriginal+50;
+            Long estudianteId=pagoOriginal.getEstudiante().getIdEstudiante();
+
+            nuevoPago.setCodigoPago(generarNPE(anio, codigoTipoCorreccion, estudianteId));
+            nuevoPago.setObservaciones("Reposición del pago anulado: " + codigoPago);
+            
+            pagoRepository.save(nuevoPago);
+        }
+    }
+
+    public CorteDiarioDTO generarCorteDiario(LocalDate fecha) {
+        if (fecha == null) fecha = LocalDate.now();
+
+        List<Object[]> resumenDatos = pagoRepository.obtenerResumenPorFecha(fecha);
+        List<DetalleCorteDTO> detalles = new ArrayList<>();
+        BigDecimal totalRecaudado = BigDecimal.ZERO;
+        Long totalPagos = 0L;
+
+        for (Object[] fila : resumenDatos) {
+            String concepto = (String) fila[0];
+            BigDecimal total = (BigDecimal) fila[1];
+            Long cantidad = (Long) fila[2];
+
+            detalles.add(new DetalleCorteDTO(concepto, total, cantidad));
+
+            totalRecaudado = totalRecaudado.add(total);
+            totalPagos += cantidad;
+        }
+
+        CorteDiarioDTO corteDiario = new CorteDiarioDTO();
+        corteDiario.setFecha(fecha);
+        corteDiario.setTotalIngresos(totalRecaudado);
+        corteDiario.setTotalTransacciones(totalPagos);
+        corteDiario.setDesglose(detalles);
+
+        return corteDiario;
     }
 }

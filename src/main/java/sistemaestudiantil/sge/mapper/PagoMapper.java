@@ -19,6 +19,7 @@ public class PagoMapper {
         dto.setFechaVencimiento(pago.getFechaVencimiento());
         dto.setFechaPago(pago.getFechaPago());
         dto.setEstado(pago.getEstado());
+        dto.setObservaciones(pago.getObservaciones());
         if (pago.getArancel() != null) {
             dto.setNombreArancel(pago.getArancel().getNombre());
         }
@@ -39,6 +40,7 @@ public class PagoMapper {
         pago.setFechaVencimiento(dto.getFechaVencimiento());
         pago.setFechaPago(dto.getFechaPago());
         pago.setEstado(dto.getEstado());
+        pago.setObservaciones(dto.getObservaciones());
         return pago;
     }
 }

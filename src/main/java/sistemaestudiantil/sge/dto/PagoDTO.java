@@ -1,5 +1,6 @@
 package sistemaestudiantil.sge.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import lombok.AllArgsConstructor;
@@ -15,8 +16,9 @@ public class PagoDTO {
     private Long codigoPago;
     private Long idEstudiante;
     private String nombreArancel;
-    private Double monto;
+    private BigDecimal monto;
     private LocalDate fechaVencimiento;
     private LocalDate fechaPago;
     private EstadoPago estado;
+    private String observaciones;
 }

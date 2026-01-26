@@ -1,5 +1,7 @@
 package sistemaestudiantil.sge.model;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -12,5 +14,8 @@ public class Arancel {
     private Long idArancel;
     private String nombre;
     private String codigo;
-    private Double costo;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal costo;
+    @Column(name = "es_porcentaje")
+    private Boolean esPorcentaje;
 }

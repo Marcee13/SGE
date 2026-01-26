@@ -1,16 +1,22 @@
 package sistemaestudiantil.sge.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import sistemaestudiantil.sge.dto.AnulacionRequestDTO;
+import sistemaestudiantil.sge.dto.CorteDiarioDTO;
 import sistemaestudiantil.sge.dto.PagoDTO;
 import sistemaestudiantil.sge.response.ApiResponse;
 import sistemaestudiantil.sge.service.PagoService;
@@ -26,10 +32,13 @@ public class PagoController {
         this.pagoService = pagoService;
     }
 
-    @GetMapping("/estudiante/{idEstudiante}")
-    public ResponseEntity<ApiResponse<List<PagoDTO>>> obtenerTalonario(@PathVariable Long idEstudiante) {
-        List<PagoDTO> talonario = pagoService.listarPagosPorEstudiante(idEstudiante);
-        return new ResponseEntity<>(new ApiResponse<>("Talonario de pago generado", talonario, true),HttpStatus.OK);
+    @GetMapping("/historial/{idEstudiante}")
+    public ResponseEntity<ApiResponse<List<PagoDTO>>> verHistorial(@PathVariable Long idEstudiante, @RequestParam(required = false) Integer anio) {
+        List<PagoDTO> talonario = pagoService.listarPagosPorEstudiante(idEstudiante, anio);
+        return new ResponseEntity<>(
+        new ApiResponse<>("Historial de pagos obtenido exitosamente", talonario, true),
+        HttpStatus.OK
+    );
     }
 
     @GetMapping("/pendientes/{idEstudiante}")
@@ -43,10 +52,29 @@ public class PagoController {
         return new ResponseEntity<>(respuesta,HttpStatus.OK);
     }
 
-    @PostMapping("/{codigoPago}/pagar")
+    @PostMapping("/pagar/{codigoPago}")
     public ResponseEntity<ApiResponse<PagoDTO>> cobrar(@PathVariable Long codigoPago) {
         PagoDTO recibo = pagoService.registrarPago(codigoPago);
         return ResponseEntity.ok(new ApiResponse<>("Pago registrado correctamente", recibo, true));
+    }
+
+    @PostMapping("/anular")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATIVO')")
+    public ResponseEntity<ApiResponse<Void>> anularPago(@RequestBody AnulacionRequestDTO request) {
+        pagoService.anularPago(request.getCodigoPago(), request.getMotivo(), request.isRegenerar());
+        return ResponseEntity.ok(new ApiResponse<>("Pago anulado correctamente", null, true));
+    }
+
+    @GetMapping("/corte-diario")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATIVO')")
+    public ResponseEntity<ApiResponse<CorteDiarioDTO>> verCorteDiario(
+            @RequestParam(required = false) LocalDate fecha) {
+        
+        CorteDiarioDTO reporte = pagoService.generarCorteDiario(fecha);
+        
+        return ResponseEntity.ok(
+            new ApiResponse<>("Corte de caja generado exitosamente", reporte, true)
+        );
     }
 }
 
