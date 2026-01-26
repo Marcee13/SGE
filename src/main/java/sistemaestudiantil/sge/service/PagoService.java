@@ -34,12 +34,15 @@ public class PagoService {
     @Transactional
     public Pago generarPagoExamen(Estudiante estudiante, TipoArancel tipo){
         String codigoBuscar="";
+        int codigoTipoParaNPE=0;
         switch (tipo) {
             case EXAMEN_ADMISION:
                 codigoBuscar="EX-ADM";
+                codigoTipoParaNPE=21;
                 break;
             case EXAMEN_CONOCIMIENTOS:
                 codigoBuscar="EX-CON";
+                codigoTipoParaNPE=22;
                 break;
             default:
                 throw new OperacionNoPermitidaException("Tipo de examen no válido");
@@ -51,6 +54,8 @@ public class PagoService {
         Pago pago = new Pago();
         pago.setEstudiante(estudiante);
         pago.setArancel(arancel);
+        int anioActual = LocalDate.now().getYear();
+        pago.setCodigoPago(generarNPE(anioActual, codigoTipoParaNPE, estudiante.getIdEstudiante()));
         pago.setMonto(arancel.getCosto());
         pago.setFechaVencimiento(LocalDate.now().plusDays(15));
         pago.setEstado(EstadoPago.PENDIENTE);
@@ -64,21 +69,23 @@ public class PagoService {
 
         Arancel arancelMatricula = arancelRepository.findByCodigo("MATRICULA").orElseThrow(() -> new RecursoNoencontradoException("Falta configurar precio MATRICULA"));
 
+        Arancel arancelMensualidad = arancelRepository.findByCodigo("MENSUALIDAD").orElseThrow(() -> new RecursoNoencontradoException("Falta configurar precio MENSUALIDAD"));
+
         Pago matricula = new Pago();
         matricula.setEstudiante(estudiante);
         matricula.setArancel(arancelMatricula);
+        matricula.setCodigoPago(generarNPE(anio, 0, estudiante.getIdEstudiante()));
         matricula.setMonto(arancelMatricula.getCosto());
         matricula.setFechaVencimiento(LocalDate.of(anio, 1, 31)); 
         matricula.setEstado(EstadoPago.PENDIENTE);
         talonario.add(matricula);
-
-        Arancel arancelMensualidad = arancelRepository.findByCodigo("MENSUALIDAD").orElseThrow(() -> new RecursoNoencontradoException("Falta configurar precio MENSUALIDAD"));
 
         for (int mes = 1; mes <= 12; mes++) {
             Pago mensualidad = new Pago();
             mensualidad.setEstudiante(estudiante);
             mensualidad.setArancel(arancelMensualidad);
             mensualidad.setMonto(arancelMensualidad.getCosto());
+            mensualidad.setCodigoPago(generarNPE(anio, mes, estudiante.getIdEstudiante()));
 
             int diaFinMes = LocalDate.of(anio,mes,1).lengthOfMonth();
             mensualidad.setFechaVencimiento(LocalDate.of(anio, mes, diaFinMes));
@@ -90,17 +97,10 @@ public class PagoService {
         pagoRepository.saveAll(talonario);
     }
 
-    public List<PagoDTO> listarPagosPorEstudiante(Long idEstudiante) {
-    return pagoRepository.findByEstudiante_IdEstudianteOrderByFechaVencimientoAsc(idEstudiante)
-            .stream()
-            .map(pagoMapper::toDTO)
-            .toList();
-    }
-
     @Transactional
-    public PagoDTO registrarPago(Long idPago) {
-        Pago pago = pagoRepository.findById(idPago)
-                .orElseThrow(() -> new RecursoNoencontradoException("No se encontró el recibo con ID: " + idPago));
+    public PagoDTO registrarPago(Long codigoPago) {
+        Pago pago = pagoRepository.findByCodigoPago(codigoPago)
+                .orElseThrow(() -> new RecursoNoencontradoException("No se encontró el recibo con código: " + codigoPago));
 
         if (pago.getEstado() == EstadoPago.PAGADO) {
             throw new OperacionNoPermitidaException("Este recibo ya fue pagado el día: " + pago.getFechaPago());
@@ -114,10 +114,24 @@ public class PagoService {
         return pagoMapper.toDTO(pagoRealizado);
     }
 
+    //listar TODOS los pagos por estudiante ordenados por fecha de vencimiento
+    public List<PagoDTO> listarPagosPorEstudiante(Long idEstudiante) {
+        return pagoRepository.findByEstudiante_IdEstudianteOrderByFechaVencimientoAsc(idEstudiante)
+                .stream()
+                .map(pagoMapper::toDTO)
+                .toList();
+    }
+
+    //listar todos los pagos PENDIENTES por estudiante ordenados por fecha de vencimiento
     public List<PagoDTO> listarPendientes(Long idEstudiante) {
         return pagoRepository.findByEstudiante_IdEstudianteAndEstadoOrderByFechaVencimientoAsc(idEstudiante, EstadoPago.PENDIENTE)
                 .stream()
                 .map(pagoMapper::toDTO)
                 .toList();
+    }
+
+    private Long generarNPE(int anio, int codigoTipo, Long estudianteId) {
+        String codigoStr = String.format("%d%02d%06d", anio, codigoTipo, estudianteId);
+        return Long.parseLong(codigoStr);
     }
 }

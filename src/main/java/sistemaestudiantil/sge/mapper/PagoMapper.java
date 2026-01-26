@@ -15,6 +15,7 @@ public class PagoMapper {
         PagoDTO dto = new PagoDTO();
         dto.setIdPago(pago.getIdPago());
         dto.setMonto(pago.getMonto());
+        dto.setCodigoPago(pago.getCodigoPago());
         dto.setFechaVencimiento(pago.getFechaVencimiento());
         dto.setFechaPago(pago.getFechaPago());
         dto.setEstado(pago.getEstado());
@@ -33,6 +34,7 @@ public class PagoMapper {
         }
         Pago pago = new Pago();
         pago.setIdPago(dto.getIdPago());
+        pago.setCodigoPago(dto.getCodigoPago());
         pago.setMonto(dto.getMonto());
         pago.setFechaVencimiento(dto.getFechaVencimiento());
         pago.setFechaPago(dto.getFechaPago());

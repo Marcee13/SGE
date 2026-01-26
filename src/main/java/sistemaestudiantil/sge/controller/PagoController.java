@@ -43,9 +43,9 @@ public class PagoController {
         return new ResponseEntity<>(respuesta,HttpStatus.OK);
     }
 
-    @PostMapping("/{idPago}/pagar")
-    public ResponseEntity<ApiResponse<PagoDTO>> cobrar(@PathVariable Long idPago) {
-        PagoDTO recibo = pagoService.registrarPago(idPago);
+    @PostMapping("/{codigoPago}/pagar")
+    public ResponseEntity<ApiResponse<PagoDTO>> cobrar(@PathVariable Long codigoPago) {
+        PagoDTO recibo = pagoService.registrarPago(codigoPago);
         return ResponseEntity.ok(new ApiResponse<>("Pago registrado correctamente", recibo, true));
     }
 }

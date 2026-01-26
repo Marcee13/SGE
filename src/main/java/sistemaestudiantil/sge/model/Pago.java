@@ -16,6 +16,7 @@ public class Pago {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idPago;
+    private Long codigoPago;
 
     @ManyToOne
     @JsonIdentityInfo(
@@ -31,9 +32,9 @@ public class Pago {
         generator = ObjectIdGenerators.PropertyGenerator.class, 
         property = "id"
     )
-    
     @JoinColumn(name = "id_arancel")
     private Arancel arancel;
+    
     private Double monto;
     private LocalDate fechaVencimiento;
     private LocalDate fechaPago;

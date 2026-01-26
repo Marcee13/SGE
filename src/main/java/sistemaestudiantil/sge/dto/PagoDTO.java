@@ -12,6 +12,7 @@ import sistemaestudiantil.sge.enums.EstadoPago;
 @NoArgsConstructor
 public class PagoDTO {
     private Long idPago;
+    private Long codigoPago;
     private Long idEstudiante;
     private String nombreArancel;
     private Double monto;
