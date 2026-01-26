@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import sistemaestudiantil.sge.dto.AsignaturaDTO;
+import sistemaestudiantil.sge.dto.AsignaturaResumenDTO;
 import sistemaestudiantil.sge.model.Asignatura;
 
 @Component //IMPORTANTE, no olvidar las etiquetas
@@ -17,11 +18,15 @@ public class AsignaturaMapper {
         dto.setCodigo(asignatura.getCodigo());
         dto.setNivelCiclo(asignatura.getNivelCiclo());
         if (asignatura.getPrerrequisitos() != null && !asignatura.getPrerrequisitos().isEmpty()) {
-            List<Long> ids = asignatura.getPrerrequisitos().stream()
-                .map(Asignatura::getIdAsignatura)
+            List<AsignaturaResumenDTO> listaPrerrequisitos = asignatura.getPrerrequisitos().stream()
+                .map(prerrequisito -> new AsignaturaResumenDTO(
+                    prerrequisito.getIdAsignatura(),
+                    prerrequisito.getCodigo(),
+                    prerrequisito.getName()
+                ))
                 .toList();
             
-            dto.setIdsPrerrequisitos(ids);
+            dto.setPrerrequisitos(listaPrerrequisitos);
         }
         return dto;
     }

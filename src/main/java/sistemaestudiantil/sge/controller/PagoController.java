@@ -67,13 +67,9 @@ public class PagoController {
 
     @GetMapping("/corte-diario")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATIVO')")
-    public ResponseEntity<ApiResponse<CorteDiarioDTO>> verCorteDiario(
-            @RequestParam(required = false) LocalDate fecha) {
-        
+    public ResponseEntity<ApiResponse<CorteDiarioDTO>> verCorteDiario(@RequestParam(required = false) LocalDate fecha) {
         CorteDiarioDTO reporte = pagoService.generarCorteDiario(fecha);
-        
-        return ResponseEntity.ok(
-            new ApiResponse<>("Corte de caja generado exitosamente", reporte, true)
+        return ResponseEntity.ok(new ApiResponse<>("Corte de caja generado exitosamente", reporte, true)
         );
     }
 }

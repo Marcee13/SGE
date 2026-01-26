@@ -28,6 +28,7 @@ public class Asignatura {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private List<Grupo> grupos;
+    private List<Long> idsPrerrequisitos;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
