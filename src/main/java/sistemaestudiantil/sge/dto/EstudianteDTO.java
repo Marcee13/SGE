@@ -34,6 +34,10 @@ public class EstudianteDTO {
     private String paisResidencia;
     private boolean debeCambiarClave;
     private Roles rol;
+    private String documentoNIT;
+    private String documentoDUI;
+    private String documentoTitulo;
+    private String fotoPerfil;
 
     private Long idCarrera;
     private String nombreCarrera;

@@ -13,7 +13,6 @@ import sistemaestudiantil.sge.dto.EstudianteDTO;
 import sistemaestudiantil.sge.dto.EvaluacionDTO;
 import sistemaestudiantil.sge.enums.EstadoEstudiante;
 import sistemaestudiantil.sge.enums.EstadoInscripcion;
-import sistemaestudiantil.sge.enums.EstadoPago;
 import sistemaestudiantil.sge.enums.Roles;
 import sistemaestudiantil.sge.enums.TipoArancel;
 import sistemaestudiantil.sge.enums.TipoExamenAdmision;
@@ -28,7 +27,6 @@ import sistemaestudiantil.sge.model.Inscripcion;
 import sistemaestudiantil.sge.repository.EstudianteRepository;
 import sistemaestudiantil.sge.repository.EvaluacionRepository;
 import sistemaestudiantil.sge.repository.InscripcionRepository;
-import sistemaestudiantil.sge.repository.PagoRepository;
 
 @Service
 @AllArgsConstructor

@@ -6,8 +6,9 @@ import java.util.List;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -16,13 +17,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import sistemaestudiantil.sge.dto.EstudianteDTO;
-import sistemaestudiantil.sge.enums.EstadoEstudiante;
-import sistemaestudiantil.sge.enums.TipoExamenAdmision;
 import sistemaestudiantil.sge.exceptions.RecursoNoencontradoException;
+import sistemaestudiantil.sge.mapper.EstudianteMapper;
 import sistemaestudiantil.sge.model.Estudiante;
 import sistemaestudiantil.sge.repository.EstudianteRepository;
 import sistemaestudiantil.sge.response.ApiResponse;
@@ -34,14 +35,15 @@ import sistemaestudiantil.sge.service.StorageService;
 public class EstudianteController {
     private final EstudianteService service;
     private final StorageService storageService;
+    private final EstudianteMapper estudianteMapper;
     private final EstudianteRepository estudianteRepository;
     private static final Logger logger = LoggerFactory.getLogger(EstudianteController.class);
-    private static final String MSJ_ESTUDIANTE_NO_ENCONTRADO = "Estudiante con ID %d no encontrado.";
 
-    public EstudianteController(EstudianteService service, StorageService storageService, EstudianteRepository estudianteRepository){
+    public EstudianteController(EstudianteService service, StorageService storageService, EstudianteRepository estudianteRepository, EstudianteMapper estudianteMapper){
         this.service = service;
         this.estudianteRepository=estudianteRepository;
         this.storageService=storageService;
+        this.estudianteMapper=estudianteMapper;
     }
 
     @GetMapping
@@ -96,11 +98,10 @@ public class EstudianteController {
         );
     }
 
-   @PostMapping("/{id}/foto")
-    // @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATIVO')")
-    public ResponseEntity<ApiResponse<String>> subirFotoPerfil(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
-
-        Estudiante estudiante = estudianteRepository.findById(id).orElseThrow(() -> new RecursoNoencontradoException((String.format(MSJ_ESTUDIANTE_NO_ENCONTRADO, id))));
+   @PostMapping(value = "/foto-perfil", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATIVO') or hasRole('ESTUDIANTE')")
+    public ResponseEntity<ApiResponse<String>> subirFotoPerfil(Authentication authentication, @RequestParam("file") MultipartFile file) {
+        Estudiante estudiante = obtenerEstudianteLogueado(authentication);
 
         String nombreArchivo = storageService.almacenarArchivo(file);
 
@@ -114,12 +115,10 @@ public class EstudianteController {
         ));
     }
 
-    @PostMapping("/{id}/titulo-bachiller")
-    // @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATIVO')")
-    public ResponseEntity<ApiResponse<String>> subirTitulo(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
-
-        Estudiante estudiante = estudianteRepository.findById(id).orElseThrow(() -> new RecursoNoencontradoException((String.format(MSJ_ESTUDIANTE_NO_ENCONTRADO, id))));
-
+    @PostMapping(value = "/titulo-bachiller", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATIVO') or hasRole('ESTUDIANTE')")
+    public ResponseEntity<ApiResponse<String>> subirTitulo(Authentication authentication, @RequestParam("file") MultipartFile file) {
+        Estudiante estudiante = obtenerEstudianteLogueado(authentication);
         String nombreArchivo = storageService.almacenarArchivo(file);
 
         estudiante.setDocumentoTitulo(nombreArchivo);
@@ -132,12 +131,10 @@ public class EstudianteController {
         ));
     }
 
-    @PostMapping("/{id}/dui")
-    // @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATIVO')")
-    public ResponseEntity<ApiResponse<String>> subirDUI(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
-
-        Estudiante estudiante = estudianteRepository.findById(id).orElseThrow(() -> new RecursoNoencontradoException((String.format(MSJ_ESTUDIANTE_NO_ENCONTRADO, id))));
-
+    @PostMapping(value = "/dui", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATIVO') or hasRole('ESTUDIANTE')")
+    public ResponseEntity<ApiResponse<String>> subirDUI(Authentication authentication, @RequestParam("file") MultipartFile file) {
+        Estudiante estudiante = obtenerEstudianteLogueado(authentication);
         String nombreArchivo = storageService.almacenarArchivo(file);
 
         estudiante.setDocumentoDUI(nombreArchivo);
@@ -150,12 +147,11 @@ public class EstudianteController {
         ));
     }
 
-    @PostMapping("/{id}/nit")
-    // @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATIVO')")
-    public ResponseEntity<ApiResponse<String>> subirNIT(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+    @PostMapping(value = "/nit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATIVO') or hasRole('ESTUDIANTE')")
+    public ResponseEntity<ApiResponse<String>> subirNIT(Authentication authentication, @RequestParam("file") MultipartFile file) {
 
-        Estudiante estudiante = estudianteRepository.findById(id).orElseThrow(() -> new RecursoNoencontradoException((String.format(MSJ_ESTUDIANTE_NO_ENCONTRADO, id))));
-
+        Estudiante estudiante = obtenerEstudianteLogueado(authentication);
         String nombreArchivo = storageService.almacenarArchivo(file);
 
         estudiante.setDocumentoNIT(nombreArchivo);
@@ -173,8 +169,18 @@ public class EstudianteController {
         "/documento/{filename:.+}",
         "/archivo/{filename:.+}"
     })
-    public ResponseEntity<Resource> verArchivo(@PathVariable String filename) {
-        
+    public ResponseEntity<Resource> verArchivo(Authentication authentication, @PathVariable String filename) {
+        String usuarioLogueado= authentication.getName();
+
+        boolean esAdmin = authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals("ROLE_ADMIN") || r.getAuthority().equals("ROLE_ADMINISTRATIVO"));
+
+        if(!esAdmin){
+            boolean esSuyo=estudianteRepository.esSuyoElArchivo(usuarioLogueado, filename);
+            if(!esSuyo){
+                throw new RecursoNoencontradoException("No tiene permiso para acceder a este archivo.");
+            }
+        }
+
         Resource file = storageService.cargarComoRecurso(filename);
         
         String contentType = "application/octet-stream";
@@ -188,5 +194,25 @@ public class EstudianteController {
         return ResponseEntity.ok()
                 .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, contentType)
                 .body(file);
+    }
+
+    private Estudiante obtenerEstudianteLogueado(Authentication authentication) {
+        String username = authentication.getName();
+
+        return estudianteRepository.findByCarnetOrEmail(username, username).orElseThrow(() -> new RecursoNoencontradoException("No se encontró el perfil del usuario: " + username));
+    }
+
+    @GetMapping("/mi-perfil")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ADMINISTRATIVO') or hasRole('ESTUDIANTE')")
+    public ResponseEntity<ApiResponse<EstudianteDTO>> obtenerMiPerfil(Authentication authentication) {
+        String identificador= authentication.getName();
+
+        EstudianteDTO perfilEstudiante = service.buscarPorCarnetOrEmail(identificador);
+
+        return ResponseEntity.ok(new ApiResponse<>(
+            "Perfil recuperado exitosamente.",
+            perfilEstudiante,
+            true
+        ));
     }
 }

@@ -35,8 +35,10 @@ public class StorageService {
     @PostConstruct
     public void init() {
         try {
+            if(storageLocation==null||storageLocation.trim().isEmpty()){
+                throw new AlmacenamientoException("La ubicación de almacenamiento no está configurada correctamente.");
+            }
             this.rootLocation = Paths.get(storageLocation).toAbsolutePath().normalize();
-            
             Files.createDirectories(this.rootLocation);
         } catch (IOException e) {
             throw new AlmacenamientoException("No se pudo inicializar la carpeta de almacenamiento.", e);
@@ -44,12 +46,12 @@ public class StorageService {
     }
 
     public String almacenarArchivo(MultipartFile file) {
+
         if (file.isEmpty()) {
             throw new OperacionNoPermitidaException("Error: El archivo enviado está vacío.");
         }
 
         String rawFilename = file.getOriginalFilename();
-        
         if (rawFilename == null) {
             throw new OperacionNoPermitidaException("Error: El archivo no tiene nombre válido.");
         }
@@ -62,7 +64,7 @@ public class StorageService {
 
         String extension = obtenerExtension(originalFilename);
         
-        if (!extensionesPermitidas.contains(extension.toLowerCase().replace(".", ""))) {
+        if (extension.isEmpty() || !extensionesPermitidas.contains(extension.toLowerCase().replace(".", ""))) {
             throw new OperacionNoPermitidaException("Tipo de archivo no permitido. Solo se aceptan: " + extensionesPermitidas);
         }
 

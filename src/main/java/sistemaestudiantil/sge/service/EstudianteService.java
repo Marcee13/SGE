@@ -1,7 +1,9 @@
 package sistemaestudiantil.sge.service;
 
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -147,5 +149,10 @@ public class EstudianteService {
     public List<EstudianteDTO> listarEstudiantesPorFacultad(Long idFacultad){
         List<Estudiante> estudiantes=repository.findByCarrera_Facultad_IdFacultad(idFacultad);
         return estudiantes.stream().map(mapper::toDTO).toList();
+    }
+
+    public EstudianteDTO buscarPorCarnetOrEmail(String identificador) {
+        Estudiante estudiante = repository.findByCarnetOrEmail(identificador, identificador).orElseThrow(() -> new EntityNotFoundException("Estudiante no encontrado con carnet o email: " + identificador));
+        return mapper.toDTO(estudiante);
     }
 }

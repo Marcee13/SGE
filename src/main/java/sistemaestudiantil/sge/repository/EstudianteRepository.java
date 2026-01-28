@@ -40,4 +40,10 @@ public interface EstudianteRepository extends JpaRepository<Estudiante,Long> {
        List<ItemEstadisticoDTO> contarEstudiantesPorCarrera();
        
     long count();
+
+    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM Estudiante e " +
+           "WHERE (e.carnet = :identificador OR e.email = :identificador) " +
+           "AND (e.fotoPerfil = :filename OR e.documentoTitulo = :filename " +
+           "OR e.documentoDUI = :filename OR e.documentoNIT = :filename)")
+    boolean esSuyoElArchivo(@Param("identificador") String identificador, @Param("filename") String filename);
 }
