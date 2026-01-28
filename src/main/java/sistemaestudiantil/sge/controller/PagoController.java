@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,18 +33,20 @@ public class PagoController {
         this.pagoService = pagoService;
     }
 
-    @GetMapping("/historial/{idEstudiante}")
-    public ResponseEntity<ApiResponse<List<PagoDTO>>> verHistorial(@PathVariable Long idEstudiante, @RequestParam(required = false) Integer anio) {
-        List<PagoDTO> talonario = pagoService.listarPagosPorEstudiante(idEstudiante, anio);
+    @GetMapping("/historial")
+    public ResponseEntity<ApiResponse<List<PagoDTO>>> verHistorial(Authentication authentication, @RequestParam(required = false) Integer anio) {
+        String identificador = authentication.getName();
+        List<PagoDTO> talonario = pagoService.listarPagosPorEstudiante(identificador, anio);
         return new ResponseEntity<>(
         new ApiResponse<>("Historial de pagos obtenido exitosamente", talonario, true),
         HttpStatus.OK
     );
     }
 
-    @GetMapping("/pendientes/{idEstudiante}")
-    public ResponseEntity<ApiResponse<List<PagoDTO>>> obtenerPendientes(@PathVariable Long idEstudiante) {
-        List<PagoDTO> pendientes = pagoService.listarPendientes(idEstudiante);
+    @GetMapping("/pendientes")
+    public ResponseEntity<ApiResponse<List<PagoDTO>>> obtenerPendientes(Authentication authentication) {
+        String usuarioLogueado = authentication.getName();
+        List<PagoDTO> pendientes = pagoService.listarPendientes(usuarioLogueado);
         ApiResponse<List<PagoDTO>> respuesta = new ApiResponse<>(
             "Deuda pendiente", 
             pendientes, 

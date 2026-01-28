@@ -19,7 +19,7 @@ public class Asignatura {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idAsignatura;
     private String name;
-    private int uv;
+    private Integer uv;
     @Column(unique = true) 
     private String codigo;
     @Column(nullable = false)

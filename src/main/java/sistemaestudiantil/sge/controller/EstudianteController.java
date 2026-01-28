@@ -67,25 +67,6 @@ public class EstudianteController {
         return new ResponseEntity<>(respuesta, HttpStatus.CREATED);
     }
 
-    @PatchMapping("/{id}/calificar-admision")
-    public ResponseEntity<ApiResponse<EstudianteDTO>> calificarAspirante(@PathVariable Long id, @RequestParam Double nota, @RequestParam TipoExamenAdmision tipo){
-        EstudianteDTO resultado =service.calificarAspirante(id, nota, tipo);
-
-        String mensaje="";
-        
-        if(resultado.getEstado()==EstadoEstudiante.SELECCIONADO){
-            mensaje="El aspirante ha aprobado la prueba de conocimientos generales.";
-        }else if(resultado.getEstado()==EstadoEstudiante.REPROBADO){
-            mensaje="El aspirante ha reprobado el examen de conocimiento específicos. No puede continuar el proceso de ingreso.";
-        }else if(resultado.getEstado()==EstadoEstudiante.CONDICIONADO){
-            mensaje="El aspirante ha alcanzado el puntaje de aprobacion de la prueba de conocimiento generales. Puedo continuar con el proceso correspondiente a carreras de profesorado.";
-        }else{
-            mensaje="El aspirante no ha alcanzado el puntaje de aprobacion de la prueba de conocimientos generales. Debe realizar la prueba de conocimiento específicos.";
-        }
-
-        return new ResponseEntity<>(new ApiResponse<>(mensaje, resultado, true),HttpStatus.OK);
-    }
-
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<EstudianteDTO>> actualizarEstudiante(@PathVariable Long id, @RequestBody EstudianteDTO dto) {
         EstudianteDTO actualizado=service.actualizarEstudiante(id, dto);
@@ -113,12 +94,6 @@ public class EstudianteController {
             lista, 
             true)
         );
-    }
-
-    @PostMapping("/{id}/formalizar")
-    public ResponseEntity<EstudianteDTO> formalizarIngreso(@PathVariable Long id) {
-        EstudianteDTO resultado = service.formalizarInscripcion(id);
-        return ResponseEntity.ok(resultado);
     }
 
    @PostMapping("/{id}/foto")

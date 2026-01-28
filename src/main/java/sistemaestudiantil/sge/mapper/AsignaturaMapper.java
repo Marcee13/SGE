@@ -27,6 +27,12 @@ public class AsignaturaMapper {
                 .toList();
             
             dto.setPrerrequisitos(listaPrerrequisitos);
+
+             List<Long> ids = asignatura.getPrerrequisitos().stream()
+                .map(Asignatura::getIdAsignatura)
+                .toList();
+            
+            dto.setIdsPrerrequisitos(ids);
         }
         return dto;
     }
@@ -39,5 +45,12 @@ public class AsignaturaMapper {
         asignatura.setCodigo(dto.getCodigo());
         asignatura.setNivelCiclo(dto.getNivelCiclo());
         return asignatura;
+    }
+
+    public void actualizarEntidad(Asignatura entidadExistente, AsignaturaDTO dtoNuevo) {
+        if (dtoNuevo.getName() != null) entidadExistente.setName(dtoNuevo.getName());
+        if (dtoNuevo.getCodigo() != null) entidadExistente.setCodigo(dtoNuevo.getCodigo());
+        if (dtoNuevo.getUv()!=null) entidadExistente.setUv(dtoNuevo.getUv());
+        if (dtoNuevo.getNivelCiclo() != null) entidadExistente.setNivelCiclo(dtoNuevo.getNivelCiclo());
     }
 }

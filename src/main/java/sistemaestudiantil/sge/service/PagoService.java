@@ -21,6 +21,7 @@ import sistemaestudiantil.sge.model.Arancel;
 import sistemaestudiantil.sge.model.Estudiante;
 import sistemaestudiantil.sge.model.Pago;
 import sistemaestudiantil.sge.repository.ArancelRepository;
+import sistemaestudiantil.sge.repository.EstudianteRepository;
 import sistemaestudiantil.sge.repository.PagoRepository;
 
 @Service
@@ -28,11 +29,13 @@ public class PagoService {
     private final PagoRepository pagoRepository;
     private final ArancelRepository arancelRepository;
     private final PagoMapper pagoMapper;
+    private final EstudianteRepository estudianteRepository;
 
-    public PagoService(PagoRepository pagoRepository, PagoMapper pagoMapper, ArancelRepository arancelRepository){
+    public PagoService(PagoRepository pagoRepository, PagoMapper pagoMapper, ArancelRepository arancelRepository, EstudianteRepository estudianteRepository){
         this.arancelRepository=arancelRepository;
         this.pagoMapper=pagoMapper;
         this.pagoRepository=pagoRepository;
+        this.estudianteRepository=estudianteRepository;
     }
 
     @Transactional
@@ -149,12 +152,13 @@ public class PagoService {
     }
 
     //listar TODOS los pagos por estudiante ordenados por fecha de vencimiento y año opcional
-    public List<PagoDTO> listarPagosPorEstudiante(Long idEstudiante, Integer anio) {
+    public List<PagoDTO> listarPagosPorEstudiante(String identificador, Integer anio) {
+        Estudiante estudiante = estudianteRepository.findByCarnetOrEmail(identificador, identificador).orElseThrow(() -> new RecursoNoencontradoException("Estudiante no encontrado con el identificador: " + identificador));
         List<Pago> pagos;
         if (anio != null) {
-            pagos = pagoRepository.findByEstudianteAndAnio(idEstudiante, anio);
+            pagos = pagoRepository.findByEstudianteAndAnio(estudiante.getIdEstudiante(), anio);
         } else {
-            pagos = pagoRepository.findByEstudiante_IdEstudianteOrderByFechaVencimientoAsc(idEstudiante);
+            pagos = pagoRepository.findByEstudiante_IdEstudianteOrderByFechaVencimientoAsc(estudiante.getIdEstudiante());
         }
         return pagos.stream()
                 .map(pagoMapper::toDTO)
@@ -162,8 +166,9 @@ public class PagoService {
     }
 
     //listar todos los pagos PENDIENTES por estudiante ordenados por fecha de vencimiento
-    public List<PagoDTO> listarPendientes(Long idEstudiante) {
-        return pagoRepository.findByEstudiante_IdEstudianteAndEstadoOrderByFechaVencimientoAsc(idEstudiante, EstadoPago.PENDIENTE)
+    public List<PagoDTO> listarPendientes(String identificador) {
+        Estudiante estudiante = estudianteRepository.findByCarnetOrEmail(identificador, identificador).orElseThrow(() -> new RecursoNoencontradoException("Estudiante no encontrado con el identificador: " + identificador));
+        return pagoRepository.findByEstudiante_IdEstudianteAndEstadoOrderByFechaVencimientoAsc(estudiante.getIdEstudiante(), EstadoPago.PENDIENTE)
                 .stream()
                 .map(pagoMapper::toDTO)
                 .toList();
@@ -238,4 +243,12 @@ public class PagoService {
 
         return corteDiario;
     }
+
+    public boolean estaSolvente(Long idEstudiante, String codigoArancel) {
+    return pagoRepository.existsByEstudiante_IdEstudianteAndArancel_CodigoAndEstado(
+            idEstudiante, 
+            codigoArancel, 
+            EstadoPago.PAGADO
+    );
+}
 }

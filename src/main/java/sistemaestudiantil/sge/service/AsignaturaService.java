@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import sistemaestudiantil.sge.dto.AsignaturaDTO;
 import sistemaestudiantil.sge.exceptions.DuplicadoException;
+import sistemaestudiantil.sge.exceptions.OperacionNoPermitidaException;
 import sistemaestudiantil.sge.exceptions.RecursoNoencontradoException;
 import sistemaestudiantil.sge.mapper.AsignaturaMapper;
 import sistemaestudiantil.sge.model.Asignatura;
@@ -36,6 +37,7 @@ public class AsignaturaService {
             if(prerrequisitos.size()!=dto.getIdsPrerrequisitos().size()){
                 throw new RecursoNoencontradoException("Uno o más prerrequisitos no existen.");
             }
+            validarCiclos(dto.getIdAsignatura(), prerrequisitos);
             entidad.setPrerrequisitos(prerrequisitos);
         }
 
@@ -49,5 +51,41 @@ public class AsignaturaService {
         return lista.stream()
                     .map(mapper::toDTO)
                     .toList();
+    }
+
+    @Transactional
+    public AsignaturaDTO actualizarAsignatura(Long id, AsignaturaDTO dto) {
+        Asignatura entidad = repository.findById(id).orElseThrow(() -> new RecursoNoencontradoException("Asignatura no encontrada"));
+
+        mapper.actualizarEntidad(entidad, dto);
+
+        if (dto.getIdsPrerrequisitos() != null) {
+            List<Asignatura> nuevosPrerrequisitos = repository.findAllById(dto.getIdsPrerrequisitos());
+            
+            if (nuevosPrerrequisitos.size() != dto.getIdsPrerrequisitos().size()) {
+                throw new RecursoNoencontradoException("Uno o más prerrequisitos no existen.");
+            }
+
+            validarCiclos(id, nuevosPrerrequisitos);
+
+            entidad.setPrerrequisitos(nuevosPrerrequisitos);
+        }
+
+        Asignatura guardado = repository.save(entidad);
+        return mapper.toDTO(guardado);
+    }
+
+    private void validarCiclos(Long idAsignaturaOriginal, List<Asignatura> candidatos) {
+        if (idAsignaturaOriginal == null) return; 
+
+        for (Asignatura candidato : candidatos) {
+            if (candidato.getIdAsignatura().equals(idAsignaturaOriginal)) {
+                throw new OperacionNoPermitidaException("Error: La asignatura '" + candidato.getName() + "' no puede ser prerrequisito de sí misma.");
+            }
+
+            if (candidato.getPrerrequisitos() != null && !candidato.getPrerrequisitos().isEmpty()) {
+                validarCiclos(idAsignaturaOriginal, candidato.getPrerrequisitos());
+            }
+        }
     }
 }

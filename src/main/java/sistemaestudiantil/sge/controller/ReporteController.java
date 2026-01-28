@@ -5,10 +5,10 @@ import java.io.IOException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.lowagie.text.DocumentException;
 
@@ -17,7 +17,7 @@ import sistemaestudiantil.sge.dto.ComprobanteDTO;
 import sistemaestudiantil.sge.response.ApiResponse;
 import sistemaestudiantil.sge.service.ReporteService;
 
-@Controller
+@RestController
 @RequestMapping("/api/reportes")
 public class ReporteController {
     private final ReporteService reporteService;
@@ -26,7 +26,7 @@ public class ReporteController {
         this.reporteService = reporteService;
     }
 
-    @GetMapping("/kardex/mis-notas") 
+    @GetMapping("/kardex/mis-notas")
     public void descargarMiKardex(Authentication authentication, HttpServletResponse response) throws IOException, DocumentException {
         String carnetLogueado = authentication.getName(); 
 

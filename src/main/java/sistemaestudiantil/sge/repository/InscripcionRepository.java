@@ -1,6 +1,7 @@
 package sistemaestudiantil.sge.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -35,6 +36,18 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long>{
 
        @Query("SELECT i FROM Inscripcion i WHERE i.grupo.ciclo = :ciclo AND i.estadoInscripcion = 'INSCRITO'")
        List<Inscripcion> findPendientesDeCierre(@Param("ciclo") Ciclo ciclo);
+
+       @Modifying
+       @Query("UPDATE Inscripcion i SET i.notaFinal = 0.0 WHERE i.grupo.ciclo.idCiclo = :idCiclo AND i.notaFinal IS NULL")
+       void normalizarNotasNulas(@Param("idCiclo") Long idCiclo);
+
+       @Modifying
+       @Query("UPDATE Inscripcion i SET i.estadoInscripcion = :estado WHERE i.grupo.ciclo.idCiclo = :idCiclo AND i.notaFinal >= 6.0")
+       int marcarAprobados(@Param("idCiclo") Long idCiclo, @Param("estado") EstadoInscripcion estado);
+
+       @Modifying
+       @Query("UPDATE Inscripcion i SET i.estadoInscripcion = :estado WHERE i.grupo.ciclo.idCiclo = :idCiclo AND i.notaFinal < 6.0")
+       int marcarReprobados(@Param("idCiclo") Long idCiclo, @Param("estado") EstadoInscripcion estado);
 
        @Query("SELECT i FROM Inscripcion i WHERE i.estudiante.idEstudiante = :idEstudiante " +
        "AND (i.estadoInscripcion = 'APROBADO' OR i.estadoInscripcion = 'REPROBADO') " +

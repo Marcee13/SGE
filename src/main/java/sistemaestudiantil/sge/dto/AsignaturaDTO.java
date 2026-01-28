@@ -8,7 +8,7 @@ import lombok.Data;
 public class AsignaturaDTO {
     private Long idAsignatura;
     private String name;
-    private int uv;
+    private Integer uv;
     private String codigo;
     private List<AsignaturaResumenDTO> prerrequisitos;
     private Integer nivelCiclo;

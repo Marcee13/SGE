@@ -15,6 +15,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
 
 
 @RestController
@@ -51,4 +54,15 @@ public class AsignaturaController {
         return new ResponseEntity<>(respuesta, HttpStatus.CREATED);
     }
     
+    @PutMapping("/editar/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_PROFESOR') or hasAuthority('ROLE_ADMINISTRATIVO')")
+    public ResponseEntity<ApiResponse<AsignaturaDTO>> actualizar(@PathVariable Long id, @RequestBody AsignaturaDTO dto) {
+        AsignaturaDTO actualizada = service.actualizarAsignatura(id, dto);
+        ApiResponse<AsignaturaDTO> respuesta = new ApiResponse<>(
+            "Asignatura actualizada con éxito",
+            actualizada,
+            true
+        );
+        return new ResponseEntity<>(respuesta,HttpStatus.OK);
+    }
 }
