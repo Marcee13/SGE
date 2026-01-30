@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 
 import sistemaestudiantil.sge.dto.EstudianteDTO;
 import sistemaestudiantil.sge.exceptions.RecursoNoencontradoException;
-import sistemaestudiantil.sge.mapper.EstudianteMapper;
 import sistemaestudiantil.sge.model.Estudiante;
 import sistemaestudiantil.sge.repository.EstudianteRepository;
 import sistemaestudiantil.sge.response.ApiResponse;
@@ -35,15 +34,13 @@ import sistemaestudiantil.sge.service.StorageService;
 public class EstudianteController {
     private final EstudianteService service;
     private final StorageService storageService;
-    private final EstudianteMapper estudianteMapper;
     private final EstudianteRepository estudianteRepository;
     private static final Logger logger = LoggerFactory.getLogger(EstudianteController.class);
 
-    public EstudianteController(EstudianteService service, StorageService storageService, EstudianteRepository estudianteRepository, EstudianteMapper estudianteMapper){
+    public EstudianteController(EstudianteService service, StorageService storageService, EstudianteRepository estudianteRepository){
         this.service = service;
         this.estudianteRepository=estudianteRepository;
         this.storageService=storageService;
-        this.estudianteMapper=estudianteMapper;
     }
 
     @GetMapping
